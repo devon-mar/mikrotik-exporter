@@ -2,7 +2,6 @@ package config
 
 import (
 	"io"
-	"io/ioutil"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -54,13 +53,11 @@ type DnsServer struct {
 
 // Load reads YAML from reader and unmashals in Config
 func Load(r io.Reader) (*Config, error) {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
+	d := yaml.NewDecoder(r)
+	d.SetStrict(true)
 
 	c := &Config{}
-	err = yaml.Unmarshal(b, c)
+	err := d.Decode(c)
 	if err != nil {
 		return nil, err
 	}

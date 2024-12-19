@@ -3,13 +3,11 @@ package main
 import (
 	"bytes"
 	"flag"
-	"io/ioutil"
+	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/prometheus/common/version"
-
-	"fmt"
-	"net/http"
 
 	"mikrotik-exporter/collector"
 	"mikrotik-exporter/config"
@@ -110,7 +108,7 @@ func loadConfig() (*config.Config, error) {
 }
 
 func loadConfigFromFile() (*config.Config, error) {
-	b, err := ioutil.ReadFile(*configFile)
+	b, err := os.ReadFile(*configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +130,7 @@ func loadConfigFromFlags() (*config.Config, error) {
 
 	return &config.Config{
 		Devices: []config.Device{
-			config.Device{
+			{
 				Name:     *device,
 				Address:  *address,
 				User:     *user,
@@ -255,7 +253,6 @@ func collectorOptions() []collector.Option {
 
 	if *withMonitor || cfg.Features.Monitor {
 		opts = append(opts, collector.Monitor())
-
 	}
 
 	if *withIpsec || cfg.Features.Ipsec {

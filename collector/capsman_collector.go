@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/routeros.v2/proto"
 )
 
 type capsmanCollector struct {

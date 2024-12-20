@@ -9,7 +9,6 @@ import (
 
 type collectorContext struct {
 	ch     chan<- prometheus.Metric
-	device *device
 	client *routeros.Client
 	log    *slog.Logger
 }

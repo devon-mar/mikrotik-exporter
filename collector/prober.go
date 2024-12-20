@@ -203,10 +203,8 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(&proberCollector{
 		c:       module.c,
+		target:  target,
 		timeout: module.timeout,
-		d: device{
-			Address: target,
-		},
 	})
 
 	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
@@ -217,7 +215,7 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type proberCollector struct {
 	c       *collector
-	d       device
+	target  string
 	timeout time.Duration
 }
 
@@ -227,7 +225,7 @@ func (pc *proberCollector) Collect(c chan<- prometheus.Metric) {
 	ctx, cancel := context.WithTimeout(context.Background(), pc.timeout)
 	defer cancel()
 
-	pc.c.collectForDevice(ctx, pc.d, c)
+	pc.c.collectForDevice(ctx, pc.target, c)
 }
 
 // Describe implements prometheus.Collector

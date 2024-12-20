@@ -37,7 +37,6 @@ var (
 )
 
 type collector struct {
-	devices    []device
 	collectors []routerOSCollector
 	// if nil, tls will not be used to connect to the device
 	tlsCfg *tls.Config
@@ -50,18 +49,18 @@ func (c *collector) credentials() (string, string, error) {
 	return c.usernameStr, c.passwordStr, nil
 }
 
-func (c *collector) collectForDevice(ctx context.Context, d device, ch chan<- prometheus.Metric) {
+func (c *collector) collectForDevice(ctx context.Context, target string, ch chan<- prometheus.Metric) {
 	begin := time.Now()
 
-	err := c.connectAndCollect(ctx, &d, ch)
+	err := c.connectAndCollect(ctx, target, ch)
 
 	duration := time.Since(begin)
 	var success float64
 	if err != nil {
-		slog.Error("collector failed", "target", d.Address, "duration", duration.Seconds(), "err", err)
+		slog.Error("collector failed", "target", target, "duration", duration.Seconds(), "err", err)
 		success = 0
 	} else {
-		slog.Debug("collector succeeded", "target", d.Address, "duration", duration.Seconds())
+		slog.Debug("collector succeeded", "target", target, "duration", duration.Seconds())
 		success = 1
 	}
 
@@ -69,10 +68,10 @@ func (c *collector) collectForDevice(ctx context.Context, d device, ch chan<- pr
 	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success)
 }
 
-func (c *collector) connectAndCollect(ctx context.Context, d *device, ch chan<- prometheus.Metric) error {
-	logger := slog.With("target", d.Address)
+func (c *collector) connectAndCollect(ctx context.Context, target string, ch chan<- prometheus.Metric) error {
+	logger := slog.With("target", target)
 
-	cl, err := c.connect(ctx, d)
+	cl, err := c.connect(ctx, target)
 	if err != nil {
 		logger.Error(
 			"error dialing device",
@@ -85,7 +84,6 @@ func (c *collector) connectAndCollect(ctx context.Context, d *device, ch chan<- 
 	for _, co := range c.collectors {
 		ctx := &collectorContext{
 			ch:     ch,
-			device: d,
 			client: cl,
 			log:    logger,
 		}
@@ -98,7 +96,7 @@ func (c *collector) connectAndCollect(ctx context.Context, d *device, ch chan<- 
 	return nil
 }
 
-func (c *collector) connect(ctx context.Context, d *device) (*routeros.Client, error) {
+func (c *collector) connect(ctx context.Context, target string) (*routeros.Client, error) {
 	var client *routeros.Client
 	var err error
 	username, password, err := c.credentials()
@@ -107,9 +105,9 @@ func (c *collector) connect(ctx context.Context, d *device) (*routeros.Client, e
 	}
 
 	if c.tlsCfg != nil {
-		client, err = routeros.DialTLSContext(ctx, d.Address, username, password, c.tlsCfg)
+		client, err = routeros.DialTLSContext(ctx, target, username, password, c.tlsCfg)
 	} else {
-		client, err = routeros.DialContext(ctx, d.Address, username, password)
+		client, err = routeros.DialContext(ctx, target, username, password)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("dial: %w", err)

@@ -41,6 +41,13 @@ type collector struct {
 	collectors []routerOSCollector
 	// if nil, tls will not be used to connect to the device
 	tlsCfg *tls.Config
+
+	usernameStr string
+	passwordStr string
+}
+
+func (c *collector) credentials() (string, string, error) {
+	return c.usernameStr, c.passwordStr, nil
 }
 
 func (c *collector) collectForDevice(ctx context.Context, d device, ch chan<- prometheus.Metric) {
@@ -94,10 +101,15 @@ func (c *collector) connectAndCollect(ctx context.Context, d *device, ch chan<- 
 func (c *collector) connect(ctx context.Context, d *device) (*routeros.Client, error) {
 	var client *routeros.Client
 	var err error
+	username, password, err := c.credentials()
+	if err != nil {
+		return nil, fmt.Errorf("credentials: %w", err)
+	}
+
 	if c.tlsCfg != nil {
-		client, err = routeros.DialTLSContext(ctx, d.Address, d.User, d.Password, c.tlsCfg)
+		client, err = routeros.DialTLSContext(ctx, d.Address, username, password, c.tlsCfg)
 	} else {
-		client, err = routeros.DialContext(ctx, d.Address, d.User, d.Password)
+		client, err = routeros.DialContext(ctx, d.Address, username, password)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("dial: %w", err)

@@ -169,8 +169,10 @@ func NewProber(c *config.Config) (http.Handler, error) {
 			password: m.Password,
 			timeout:  timeout,
 			c: &collector{
-				tlsCfg:     tlsCfg,
-				collectors: collectorList(m.Features),
+				tlsCfg:      tlsCfg,
+				collectors:  collectorList(m.Features),
+				usernameStr: m.Username,
+				passwordStr: m.Password,
 			},
 		}
 	}
@@ -203,9 +205,7 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c:       module.c,
 		timeout: module.timeout,
 		d: device{
-			Address:  target,
-			User:     module.username,
-			Password: module.password,
+			Address: target,
 		},
 	})
 

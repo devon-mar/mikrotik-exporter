@@ -131,7 +131,10 @@ func startServer() {
 	}
 	http.Handle(*metricsPath, h)
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	p := collector.NewProber(cfg)
+	http.Handle("GET /probe", p)
+
+	http.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok"))
 	})
 

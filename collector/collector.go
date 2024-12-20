@@ -9,7 +9,6 @@ import (
 	"io"
 	"log/slog"
 	"net"
-	"sync"
 	"time"
 
 	"mikrotik-exporter/config"
@@ -49,76 +48,6 @@ type collector struct {
 	timeout     time.Duration
 	enableTLS   bool
 	insecureTLS bool
-}
-
-// WithTimeout sets timeout for connecting to router
-func WithTimeout(d time.Duration) Option {
-	return func(c *collector) {
-		c.timeout = d
-	}
-}
-
-// WithTLS enables TLS
-func WithTLS(insecure bool) Option {
-	return func(c *collector) {
-		c.enableTLS = true
-		c.insecureTLS = insecure
-	}
-}
-
-// Option applies options to collector
-type Option func(*collector)
-
-// NewCollector creates a collector instance
-func NewCollector(cfg *config.Config, opts ...Option) (prometheus.Collector, error) {
-	slog.Info("setting up collector for devices", "numDevices", len(cfg.Devices))
-
-	c := &collector{
-		devices: cfg.Devices,
-		timeout: DefaultTimeout,
-		collectors: []routerOSCollector{
-			newInterfaceCollector(),
-			newResourceCollector(),
-		},
-	}
-
-	for _, o := range opts {
-		o(c)
-	}
-
-	return c, nil
-}
-
-// Describe implements the prometheus.Collector interface.
-func (c *collector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- scrapeDurationDesc
-	ch <- scrapeSuccessDesc
-
-	for _, co := range c.collectors {
-		co.describe(ch)
-	}
-}
-
-// Collect implements the prometheus.Collector interface.
-func (c *collector) Collect(ch chan<- prometheus.Metric) {
-	wg := sync.WaitGroup{}
-
-	var realDevices []config.Device
-
-	for _, dev := range c.devices {
-		realDevices = append(realDevices, dev)
-	}
-
-	wg.Add(len(realDevices))
-
-	for _, dev := range realDevices {
-		go func(d config.Device) {
-			c.collectForDevice(d, ch)
-			wg.Done()
-		}(dev)
-	}
-
-	wg.Wait()
 }
 
 func (c *collector) getIdentity(d *config.Device) error {

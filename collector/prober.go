@@ -186,6 +186,11 @@ func (pc *proberCollector) Collect(c chan<- prometheus.Metric) {
 }
 
 // Describe implements prometheus.Collector
-func (pc *proberCollector) Describe(c chan<- *prometheus.Desc) {
-	pc.c.Describe(c)
+func (pc *proberCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- scrapeDurationDesc
+	ch <- scrapeSuccessDesc
+
+	for _, co := range pc.c.collectors {
+		co.describe(ch)
+	}
 }

@@ -87,23 +87,19 @@ func (c *collector) connectAndCollect(ctx context.Context, target string, ch cha
 
 	cl, err := c.connect(ctx, target)
 	if err != nil {
-		logger.Error(
-			"error dialing device",
-			"error", err,
-		)
-		return err
+		return fmt.Errorf("connect: %w", err)
 	}
 	defer cl.Close()
 
+	collectorCtx := &collectorContext{
+		ch:     ch,
+		client: cl,
+		log:    logger,
+	}
 	for _, co := range c.collectors {
-		ctx := &collectorContext{
-			ch:     ch,
-			client: cl,
-			log:    logger,
-		}
-		err = co.collect(ctx)
+		err = co.collect(collectorCtx)
 		if err != nil {
-			return err
+			return fmt.Errorf("collect: %w", err)
 		}
 	}
 

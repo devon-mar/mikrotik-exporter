@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -19,7 +19,6 @@ func (c *dhcpLeaseCollector) init() {
 
 	labelNames := []string{"name", "address", "activemacaddress", "server", "status", "expiresafter", "activeaddress", "hostname"}
 	c.descriptions = description("dhcp", "leases_metrics", "number of metrics", labelNames)
-
 }
 
 func newDHCPLCollector() routerOSCollector {
@@ -48,10 +47,11 @@ func (c *dhcpLeaseCollector) collect(ctx *collectorContext) error {
 func (c *dhcpLeaseCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", "?status=bound", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching DHCP leases metrics")
+		slog.Error(
+			"error fetching DHCP leases metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -63,12 +63,13 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 
 	f, err := parseDuration(re.Map["expires-after"])
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": "expires-after",
-			"value":    re.Map["expires-after"],
-			"error":    err,
-		}).Error("error parsing duration metric value")
+		slog.Error(
+			"error parsing duration metric value",
+			"device", ctx.device.Name,
+			"property", "expires-after",
+			"value", re.Map["expires-after"],
+			"error", err,
+		)
 		return
 	}
 
@@ -81,10 +82,11 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 
 	metric, err := prometheus.NewConstMetric(c.descriptions, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error parsing dhcp lease")
+		slog.Error(
+			"error parsing dhcp lease",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return
 	}
 	ctx.ch <- metric

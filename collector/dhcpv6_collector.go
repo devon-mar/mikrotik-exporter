@@ -2,10 +2,10 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 type dhcpv6Collector struct {
@@ -48,10 +48,11 @@ func (c *dhcpv6Collector) collect(ctx *collectorContext) error {
 func (c *dhcpv6Collector) fetchDHCPServerNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/ipv6/dhcp-server/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching DHCPv6 server names")
+		slog.Error(
+			"error fetching DHCPv6 server names",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -66,21 +67,23 @@ func (c *dhcpv6Collector) fetchDHCPServerNames(ctx *collectorContext) ([]string,
 func (c *dhcpv6Collector) colllectForDHCPServer(ctx *collectorContext, dhcpServer string) error {
 	reply, err := ctx.client.Run("/ipv6/dhcp-server/binding/print", fmt.Sprintf("?server=%s", dhcpServer), "=count-only=")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"dhcpv6_server": dhcpServer,
-			"device":        ctx.device.Name,
-			"error":         err,
-		}).Error("error fetching DHCPv6 binding counts")
+		slog.Error(
+			"error fetching DHCPv6 binding counts",
+			"dhcpv6_server", dhcpServer,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"dhcpv6_server": dhcpServer,
-			"device":        ctx.device.Name,
-			"error":         err,
-		}).Error("error parsing DHCPv6 binding counts")
+		slog.Error(
+			"error parsing DHCPv6 binding counts",
+			"dhcpv6_server", dhcpServer,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 

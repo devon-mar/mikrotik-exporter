@@ -2,11 +2,11 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -22,7 +22,7 @@ func newLteCollector() routerOSCollector {
 }
 
 func (c *lteCollector) init() {
-	c.props = []string{"current-cellid", "primary-band" ,"ca-band", "rssi", "rsrp", "rsrq", "sinr"}
+	c.props = []string{"current-cellid", "primary-band", "ca-band", "rssi", "rsrp", "rsrq", "sinr"}
 	labelNames := []string{"name", "address", "interface", "cellid", "primaryband", "caband"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
@@ -55,10 +55,11 @@ func (c *lteCollector) collect(ctx *collectorContext) error {
 func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/interface/lte/print", "?disabled=false", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching lte interface names")
+		slog.Error(
+			"error fetching lte interface names",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -73,11 +74,12 @@ func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, err
 func (c *lteCollector) collectForInterface(iface string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/lte/info", fmt.Sprintf("=number=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"interface": iface,
-			"device":    ctx.device.Name,
-			"error":     err,
-		}).Error("error fetching interface statistics")
+		slog.Error(
+			"error fetching interface statistics",
+			"interface", iface,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -108,12 +110,13 @@ func (c *lteCollector) collectMetricForProperty(property, iface string, re *prot
 	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"property":  property,
-			"interface": iface,
-			"device":    ctx.device.Name,
-			"error":     err,
-		}).Error("error parsing interface metric value")
+		slog.Error(
+			"error parsing interface metric value",
+			"property", property,
+			"interface", iface,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return
 	}
 

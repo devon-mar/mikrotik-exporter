@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -14,7 +16,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
 )
 
 // single device can be defined via CLI flags, multiple via config file.
@@ -76,7 +77,7 @@ func main() {
 
 	c, err := loadConfig()
 	if err != nil {
-		log.Errorf("Could not load config: %v", err)
+		slog.Error("Could not load config", "err", err)
 		os.Exit(3)
 	}
 	cfg = c
@@ -85,18 +86,20 @@ func main() {
 }
 
 func configureLog() {
-	ll, err := log.ParseLevel(*logLevel)
+	var level slog.Level
+	err := level.UnmarshalText([]byte(*logLevel))
 	if err != nil {
 		panic(err)
 	}
 
-	log.SetLevel(ll)
-
+	handlerOpts := &slog.HandlerOptions{Level: level}
+	var handler slog.Handler
 	if *logFormat == "text" {
-		log.SetFormatter(&log.TextFormatter{})
+		handler = slog.NewTextHandler(os.Stdout, handlerOpts)
 	} else {
-		log.SetFormatter(&log.JSONFormatter{})
+		handler = slog.NewJSONHandler(os.Stdout, handlerOpts)
 	}
+	slog.SetDefault(slog.New(handler))
 }
 
 func loadConfig() (*config.Config, error) {
@@ -162,8 +165,13 @@ func startServer() {
 			</html>`))
 	})
 
-	log.Info("Listening on ", *port)
-	log.Fatal(http.ListenAndServe(*port, nil))
+	slog.Info("Listening", "port", *port)
+
+	err = http.ListenAndServe(*port, nil)
+	if err != nil {
+		slog.Error("ListenAndServe error", "err", err)
+		os.Exit(1)
+	}
 }
 
 func createMetricsHandler() (http.Handler, error) {
@@ -187,7 +195,7 @@ func createMetricsHandler() (http.Handler, error) {
 
 	return promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
-			ErrorLog:      log.New(),
+			ErrorLog:      log.Default(),
 			ErrorHandling: promhttp.ContinueOnError,
 		}), nil
 }

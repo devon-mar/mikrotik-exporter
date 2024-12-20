@@ -2,6 +2,7 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
 	"regexp"
 	"strconv"
@@ -9,11 +10,12 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
-var durationRegex *regexp.Regexp
-var durationParts [6]time.Duration
+var (
+	durationRegex *regexp.Regexp
+	durationParts [6]time.Duration
+)
 
 func init() {
 	durationRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?(?:(\d*)ms)?`)
@@ -75,11 +77,12 @@ func parseDuration(duration string) (float64, error) {
 			if match != "" && i != 0 {
 				v, err := strconv.Atoi(match)
 				if err != nil {
-					log.WithFields(log.Fields{
-						"duration": duration,
-						"value":    match,
-						"error":    err,
-					}).Error("error parsing duration field value")
+					slog.Error(
+						"error parsing duration field value",
+						"duration", duration,
+						"value", match,
+						"error", err,
+					)
 					return float64(0), err
 				}
 				u += time.Duration(v) * durationParts[i-1]

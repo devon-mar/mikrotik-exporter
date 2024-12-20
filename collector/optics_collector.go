@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -49,10 +49,11 @@ func (c *opticsCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *opticsCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface metrics")
+		slog.Error(
+			"error fetching interface metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -77,10 +78,11 @@ func (c *opticsCollector) collectOpticalMetricsForInterfaces(ifaces []string, ct
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface monitor metrics")
+		slog.Error(
+			"error fetching interface monitor metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -105,12 +107,13 @@ func (c *opticsCollector) collectMetricsForInterface(name string, se *proto.Sent
 
 		value, err := c.valueForKey(prop, v)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"device":    ctx.device.Name,
-				"interface": name,
-				"property":  prop,
-				"error":     err,
-			}).Error("error parsing interface monitor metric")
+			slog.Error(
+				"error parsing interface monitor metric",
+				"device", ctx.device.Name,
+				"interface", name,
+				"property", prop,
+				"error", err,
+			)
 			return
 		}
 

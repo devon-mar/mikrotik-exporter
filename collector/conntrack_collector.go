@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -34,10 +34,11 @@ func (c *conntrackCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *conntrackCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/ip/firewall/connection/tracking/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching conntrack table metrics")
+		slog.Error(
+			"error fetching conntrack table metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -55,12 +56,13 @@ func (c *conntrackCollector) collectMetricForProperty(property string, desc *pro
 	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing conntrack metric value")
+		slog.Error(
+			"error parsing conntrack metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 

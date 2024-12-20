@@ -2,10 +2,10 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 type dhcpCollector struct {
@@ -48,10 +48,11 @@ func (c *dhcpCollector) collect(ctx *collectorContext) error {
 func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/ip/dhcp-server/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching DHCP server names")
+		slog.Error(
+			"error fetching DHCP server names",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -66,11 +67,12 @@ func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, e
 func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer string) error {
 	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", fmt.Sprintf("?server=%s", dhcpServer), "=active=", "=count-only=")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"dhcp_server": dhcpServer,
-			"device":      ctx.device.Name,
-			"error":       err,
-		}).Error("error fetching DHCP lease counts")
+		slog.Error(
+			"error fetching DHCP lease counts",
+			"dhcp_server", dhcpServer,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 	if reply.Done.Map["ret"] == "" {
@@ -78,11 +80,12 @@ func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer 
 	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"dhcp_server": dhcpServer,
-			"device":      ctx.device.Name,
-			"error":       err,
-		}).Error("error parsing DHCP lease counts")
+		slog.Error(
+			"error parsing DHCP lease counts",
+			"dhcp_server", dhcpServer,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 

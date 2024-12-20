@@ -1,12 +1,12 @@
 package collector
 
 import (
+	"log/slog"
 	"strings"
 
 	"gopkg.in/routeros.v2/proto"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 type monitorCollector struct {
@@ -38,10 +38,11 @@ func (c *monitorCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *monitorCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching ethernet interfaces")
+		slog.Error(
+			"error fetching ethernet interfaces",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -58,12 +59,12 @@ func (c *monitorCollector) collectForMonitor(eths []string, ctx *collectorContex
 		"=numbers="+strings.Join(eths, ","),
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
-
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching ethernet monitor info")
+		slog.Error(
+			"error fetching ethernet monitor info",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -86,7 +87,6 @@ func (c *monitorCollector) collectMetricsForEth(name string, se *proto.Sentence,
 		ctx.ch <- prometheus.MustNewConstMetric(c.descriptions[prop], prometheus.GaugeValue, value, ctx.device.Name, ctx.device.Address, name)
 
 	}
-
 }
 
 func (c *monitorCollector) valueForProp(name, value string) int {

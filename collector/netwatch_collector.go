@@ -2,10 +2,10 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -51,10 +51,11 @@ func (c *netwatchCollector) collect(ctx *collectorContext) error {
 func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/tool/netwatch/print", "?disabled=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching netwatch metrics")
+		slog.Error(
+			"error fetching netwatch metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -82,13 +83,14 @@ func (c *netwatchCollector) collectMetricForProperty(property, host, comment str
 		case "down":
 			numericValue = -1
 		default:
-			log.WithFields(log.Fields{
-				"device":   ctx.device.Name,
-				"host":     host,
-				"property": property,
-				"value":    value,
-				"error":    fmt.Errorf("unexpected netwatch status value"),
-			}).Error("error parsing netwatch metric value")
+			slog.Error(
+				"error parsing netwatch metric value",
+				"device", ctx.device.Name,
+				"host", host,
+				"property", property,
+				"value", value,
+				"error", fmt.Errorf("unexpected netwatch status value"),
+			)
 		}
 		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, ctx.device.Name, ctx.device.Address, host, comment)
 	}

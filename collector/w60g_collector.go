@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -31,13 +31,15 @@ func (c *w60gInterfaceCollector) describe(ch chan<- *prometheus.Desc) {
 	ch <- c.txDistanceDesc
 	ch <- c.txPacketErrorRateDesc
 }
+
 func (c *w60gInterfaceCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/w60g/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching w60g interface metrics")
+		slog.Error(
+			"error fetching w60g interface metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -53,16 +55,18 @@ func (c *w60gInterfaceCollector) collect(ctx *collectorContext) error {
 
 	return c.collectw60gMetricsForInterfaces(ifaces, ctx)
 }
+
 func (c *w60gInterfaceCollector) collectw60gMetricsForInterfaces(ifaces []string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/w60g/monitor",
 		"=numbers="+strings.Join(ifaces, ","),
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching w60g interface monitor metrics")
+		slog.Error(
+			"error fetching w60g interface monitor metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 	for _, se := range reply.Re {
@@ -88,12 +92,13 @@ func (c *w60gInterfaceCollector) collectMetricsForw60gInterface(name string, se 
 		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"device":    ctx.device.Name,
-				"interface": name,
-				"property":  prop,
-				"error":     err,
-			}).Error("error parsing w60g interface monitor metric")
+			slog.Error(
+				"error parsing w60g interface monitor metric",
+				"device", ctx.device.Name,
+				"interface", name,
+				"property", prop,
+				"error", err,
+			)
 			return
 		}
 

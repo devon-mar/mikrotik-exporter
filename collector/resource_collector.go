@@ -2,18 +2,20 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
-var uptimeRegex *regexp.Regexp
-var uptimeParts [5]time.Duration
+var (
+	uptimeRegex *regexp.Regexp
+	uptimeParts [5]time.Duration
+)
 
 func init() {
 	uptimeRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?`)
@@ -63,10 +65,11 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching system resource metrics")
+		slog.Error(
+			"error fetching system resource metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -101,12 +104,13 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing system resource metric value")
+		slog.Error(
+			"error parsing system resource metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 
@@ -128,11 +132,12 @@ func parseUptime(uptime string) (float64, error) {
 		if match != "" && i != 0 {
 			v, err := strconv.Atoi(match)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"uptime": uptime,
-					"value":  match,
-					"error":  err,
-				}).Error("error parsing uptime field value")
+				slog.Error(
+					"error parsing uptime field value",
+					"uptime", uptime,
+					"value", match,
+					"error", err,
+				)
 				return float64(0), err
 			}
 			u += time.Duration(v) * uptimeParts[i-1]

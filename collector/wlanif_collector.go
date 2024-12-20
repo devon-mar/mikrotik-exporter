@@ -2,11 +2,11 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -55,10 +55,11 @@ func (c *wlanIFCollector) collect(ctx *collectorContext) error {
 func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/interface/wireless/print", "?disabled=false", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching wireless interface names")
+		slog.Error(
+			"error fetching wireless interface names",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -73,11 +74,12 @@ func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, 
 func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/wireless/monitor", fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"interface": iface,
-			"device":    ctx.device.Name,
-			"error":     err,
-		}).Error("error fetching interface statistics")
+		slog.Error(
+			"error fetching interface statistics",
+			"interface", iface,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -98,12 +100,13 @@ func (c *wlanIFCollector) collectMetricForProperty(property, iface string, re *p
 	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"property":  property,
-			"interface": iface,
-			"device":    ctx.device.Name,
-			"error":     err,
-		}).Error("error parsing interface metric value")
+		slog.Error(
+			"error parsing interface metric value",
+			"property", property,
+			"interface", iface,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return
 	}
 

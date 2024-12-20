@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -56,10 +56,11 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching bgp metrics")
+		slog.Error(
+			"error fetching bgp metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -79,13 +80,14 @@ func (c *bgpCollector) collectMetricForProperty(property, session, asn string, r
 	desc := c.descriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"session":  session,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing bgp metric value")
+		slog.Error(
+			"error parsing bgp metric value",
+			"device", ctx.device.Name,
+			"session", session,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 

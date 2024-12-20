@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -37,10 +37,11 @@ func (c *poeCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *poeCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/poe/print", "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface poe metrics")
+		slog.Error(
+			"error fetching interface poe metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -63,10 +64,11 @@ func (c *poeCollector) collectPOEMetricsForInterfaces(ifaces []string, ctx *coll
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface poe monitor metrics")
+		slog.Error(
+			"error fetching interface poe monitor metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 
@@ -93,12 +95,13 @@ func (c *poeCollector) collectMetricsForInterface(name string, se *proto.Sentenc
 		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"device":    ctx.device.Name,
-				"interface": name,
-				"property":  prop,
-				"error":     err,
-			}).Error("error parsing interface poe monitor metric")
+			slog.Error(
+				"error parsing interface poe monitor metric",
+				"device", ctx.device.Name,
+				"interface", name,
+				"property", prop,
+				"error", err,
+			)
 			return
 		}
 

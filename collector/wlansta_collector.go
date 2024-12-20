@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -55,10 +55,11 @@ func (c *wlanSTACollector) collect(ctx *collectorContext) error {
 func (c *wlanSTACollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/interface/wireless/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching wlan station metrics")
+		slog.Error(
+			"error fetching wlan station metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -88,12 +89,13 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 	}
 	v, err := strconv.ParseFloat(p, 64)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing wlan station metric value")
+		slog.Error(
+			"error parsing wlan station metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 
@@ -104,12 +106,13 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 func (c *wlanSTACollector) collectMetricForTXRXCounters(property, iface, mac string, re *proto.Sentence, ctx *collectorContext) {
 	tx, rx, err := splitStringToFloats(re.Map[property])
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing wlan station metric value")
+		slog.Error(
+			"error parsing wlan station metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 	desc_tx := c.descriptions["tx_"+property]

@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -52,10 +52,11 @@ func (c *ipsecCollector) collect(ctx *collectorContext) error {
 func (c *ipsecCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/ip/ipsec/policy/print", "?disabled=false", "?dynamic=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface metrics")
+		slog.Error(
+			"error fetching interface metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -96,13 +97,14 @@ func (c *ipsecCollector) collectMetricForProperty(property, srcdst, comment stri
 		}
 
 		if err != nil {
-			log.WithFields(log.Fields{
-				"device":   ctx.device.Name,
-				"srcdst":   srcdst,
-				"property": property,
-				"value":    value,
-				"error":    err,
-			}).Error("error parsing ipsec metric value")
+			slog.Error(
+				"error parsing ipsec metric value",
+				"device", ctx.device.Name,
+				"srcdst", srcdst,
+				"property", property,
+				"value", value,
+				"error", err,
+			)
 			return
 		}
 		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, srcdst, comment)

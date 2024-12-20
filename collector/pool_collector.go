@@ -2,10 +2,10 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 type poolCollector struct {
@@ -52,10 +52,11 @@ func (c *poolCollector) collectForIPVersion(ipVersion, topic string, ctx *collec
 func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching pool names")
+		slog.Error(
+			"error fetching pool names",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -70,12 +71,13 @@ func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorCo
 func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/pool/used/print", topic), fmt.Sprintf("?pool=%s", pool), "=count-only=")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"pool":       pool,
-			"ip_version": ipVersion,
-			"device":     ctx.device.Name,
-			"error":      err,
-		}).Error("error fetching pool counts")
+		slog.Error(
+			"error fetching pool counts",
+			"pool", pool,
+			"ip_version", ipVersion,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 	if reply.Done.Map["ret"] == "" {
@@ -83,12 +85,13 @@ func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *colle
 	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"pool":       pool,
-			"ip_version": ipVersion,
-			"device":     ctx.device.Name,
-			"error":      err,
-		}).Error("error parsing pool counts")
+		slog.Error(
+			"error parsing pool counts",
+			"pool", pool,
+			"ip_version", ipVersion,
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 

@@ -1,10 +1,10 @@
 package collector
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 type firmwareCollector struct {
@@ -30,10 +30,11 @@ func (c *firmwareCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *firmwareCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/system/package/getall")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		})
+		slog.Error(
+			"error collecting packages",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return err
 	}
 

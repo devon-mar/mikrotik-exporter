@@ -1,10 +1,11 @@
 package collector
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/routeros.v2/proto"
+	"log/slog"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"gopkg.in/routeros.v2/proto"
 )
 
 type healthCollector struct {
@@ -55,10 +56,11 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/system/health/print")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching system health metrics")
+		slog.Error(
+			"error fetching system health metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -85,14 +87,14 @@ func (c *healthCollector) collectMetricForProperty(property string, re *proto.Se
 		}
 	}
 	v, err = strconv.ParseFloat(value, 64)
-
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": name,
-			"value":    value,
-			"error":    err,
-		}).Error("error parsing system health metric value")
+		slog.Error(
+			"error parsing system health metric value",
+			"device", ctx.device.Name,
+			"property", name,
+			"value", value,
+			"error", err,
+		)
 		return
 	}
 

@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -56,10 +56,7 @@ func (c *capsmanCollector) collect(ctx *collectorContext) error {
 func (c *capsmanCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/caps-man/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching wlan station metrics")
+		slog.Error("error fetching wlan station metrics", "device", ctx.device.Name, "error", err)
 		return nil, err
 	}
 
@@ -96,12 +93,13 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 		v, err = parseDuration(p)
 	}
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing capsman station metric value")
+		slog.Error(
+			"error parsing capsman station metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"err", err,
+		)
 		return
 	}
 
@@ -112,12 +110,13 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ssid string, re *proto.Sentence, ctx *collectorContext) {
 	tx, rx, err := splitStringToFloats(re.Map[property])
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
-			"error":    err,
-		}).Error("error parsing capsman station metric value")
+		slog.Error(
+			"error parsing capsman station metric value",
+			"device", ctx.device.Name,
+			"property", property,
+			"value", re.Map[property],
+			"error", err,
+		)
 		return
 	}
 	desc_tx := c.descriptions["tx_"+property]

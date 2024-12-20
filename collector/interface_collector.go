@@ -1,11 +1,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
 
@@ -51,10 +51,11 @@ func (c *interfaceCollector) collect(ctx *collectorContext) error {
 func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/interface/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		log.WithFields(log.Fields{
-			"device": ctx.device.Name,
-			"error":  err,
-		}).Error("error fetching interface metrics")
+		slog.Error(
+			"error fetching interface metrics",
+			"device", ctx.device.Name,
+			"error", err,
+		)
 		return nil, err
 	}
 
@@ -91,13 +92,14 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 		default:
 			v, err = strconv.ParseFloat(value, 64)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"device":    ctx.device.Name,
-					"interface": re.Map["name"],
-					"property":  property,
-					"value":     value,
-					"error":     err,
-				}).Error("error parsing interface metric value")
+				slog.Error(
+					"error parsing interface metric value",
+					"device", ctx.device.Name,
+					"interface", re.Map["name"],
+					"property", property,
+					"value", value,
+					"error", err,
+				)
 				return
 			}
 		}

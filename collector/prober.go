@@ -20,7 +20,6 @@ import (
 const (
 	paramTarget = "target"
 	paramModule = "module"
-	portMax     = 65535
 )
 
 type proberModule struct {
@@ -186,6 +185,11 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	target := r.URL.Query().Get("target")
+	if target == "" {
+		http.Error(w, "no target", http.StatusBadRequest)
+		return
+	}
+
 	moduleName := r.URL.Query().Get("module")
 
 	module, ok := p.modules[moduleName]

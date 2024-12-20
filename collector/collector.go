@@ -1,14 +1,13 @@
 package collector
 
 import (
+	"context"
 	"crypto/md5"
-	"crypto/tls"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"net"
 	"time"
 
 	"mikrotik-exporter/config"
@@ -50,8 +49,8 @@ type collector struct {
 	insecureTLS bool
 }
 
-func (c *collector) getIdentity(d *config.Device) error {
-	cl, err := c.connect(d)
+func (c *collector) getIdentity(ctx context.Context, d *config.Device) error {
+	cl, err := c.connect(ctx, d)
 	if err != nil {
 		slog.Error(
 			"error dialing device fetching identity",
@@ -76,10 +75,10 @@ func (c *collector) getIdentity(d *config.Device) error {
 	return nil
 }
 
-func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metric) {
+func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch chan<- prometheus.Metric) {
 	begin := time.Now()
 
-	err := c.connectAndCollect(&d, ch)
+	err := c.connectAndCollect(ctx, &d, ch)
 
 	duration := time.Since(begin)
 	var success float64
@@ -95,8 +94,8 @@ func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metri
 	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success, d.Name)
 }
 
-func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Metric) error {
-	cl, err := c.connect(d)
+func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch chan<- prometheus.Metric) error {
+	cl, err := c.connect(ctx, d)
 	if err != nil {
 		slog.Error(
 			"error dialing device",
@@ -118,38 +117,8 @@ func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Met
 	return nil
 }
 
-func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
-	var conn net.Conn
-	var err error
-
-	slog.Debug("trying to Dial", "device", d.Name)
-	if !c.enableTLS {
-		if (d.Port) == "" {
-			d.Port = apiPort
-		}
-		conn, err = net.DialTimeout("tcp", d.Address+":"+d.Port, c.timeout)
-		if err != nil {
-			return nil, err
-		}
-		//		return routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
-	} else {
-		tlsCfg := &tls.Config{
-			InsecureSkipVerify: c.insecureTLS,
-		}
-		if (d.Port) == "" {
-			d.Port = apiPortTLS
-		}
-		conn, err = tls.DialWithDialer(&net.Dialer{
-			Timeout: c.timeout,
-		},
-			"tcp", d.Address+":"+d.Port, tlsCfg)
-		if err != nil {
-			return nil, err
-		}
-	}
-	slog.Debug("done dialing", "device", d.Name)
-
-	client, err := routeros.NewClient(conn)
+func (c *collector) connect(ctx context.Context, d *config.Device) (*routeros.Client, error) {
+	client, err := routeros.DialContext(ctx, d.Address+":"+d.Port, d.User, d.Password)
 	if err != nil {
 		return nil, err
 	}

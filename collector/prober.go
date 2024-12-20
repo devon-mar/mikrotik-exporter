@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"log"
 	"net"
 	"net/http"
@@ -182,7 +183,8 @@ type proberCollector struct {
 
 // Collect implements prometheus.Collector
 func (pc *proberCollector) Collect(c chan<- prometheus.Metric) {
-	pc.c.collectForDevice(pc.d, c)
+	// TODO
+	pc.c.collectForDevice(context.TODO(), pc.d, c)
 }
 
 // Describe implements prometheus.Collector

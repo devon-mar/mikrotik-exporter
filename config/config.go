@@ -44,9 +44,7 @@ type Features struct {
 
 // Config represents the configuration for the exporter
 type Config struct {
-	Devices  []Device          `yaml:"devices"`
-	Features Features          `yaml:"features,omitempty"`
-	Modules  map[string]Module `yaml:"modules"`
+	Modules map[string]Module `yaml:"modules"`
 }
 
 // Device represents a target device

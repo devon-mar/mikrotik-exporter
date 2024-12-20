@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -56,7 +55,7 @@ func (c *capsmanCollector) collect(ctx *collectorContext) error {
 func (c *capsmanCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/caps-man/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error("error fetching wlan station metrics", "device", ctx.device.Name, "error", err)
+		ctx.log.Error("error fetching wlan station metrics", "error", err)
 		return nil, err
 	}
 
@@ -93,9 +92,8 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 		v, err = parseDuration(p)
 	}
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing capsman station metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
 			"err", err,
@@ -110,12 +108,11 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ssid string, re *proto.Sentence, ctx *collectorContext) {
 	tx, rx, err := splitStringToFloats(re.Map[property])
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing capsman station metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}

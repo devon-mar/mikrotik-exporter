@@ -45,32 +45,6 @@ type collector struct {
 	tlsCfg *tls.Config
 }
 
-func (c *collector) getIdentity(ctx context.Context, d *config.Device) error {
-	cl, err := c.connect(ctx, d)
-	if err != nil {
-		slog.Error(
-			"error dialing device fetching identity",
-			"device", d.Name,
-			"error", err,
-		)
-		return err
-	}
-	defer cl.Close()
-	reply, err := cl.Run("/system/identity/print")
-	if err != nil {
-		slog.Error(
-			"error fetching ethernet interfaces",
-			"device", d.Name,
-			"error", err,
-		)
-		return err
-	}
-	for _, id := range reply.Re {
-		d.Name = id.Map["name"]
-	}
-	return nil
-}
-
 func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch chan<- prometheus.Metric) {
 	begin := time.Now()
 
@@ -79,10 +53,10 @@ func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch ch
 	duration := time.Since(begin)
 	var success float64
 	if err != nil {
-		slog.Error("collector failed", "collector", d.Name, "duration", duration.Seconds(), "err", err)
+		slog.Error("collector failed", "target", d.Address, "duration", duration.Seconds(), "err", err)
 		success = 0
 	} else {
-		slog.Debug("collector succeeded", "collector", d.Name, "duration", duration.Seconds())
+		slog.Debug("collector succeeded", "target", d.Address, "duration", duration.Seconds())
 		success = 1
 	}
 
@@ -91,11 +65,12 @@ func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch ch
 }
 
 func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch chan<- prometheus.Metric) error {
+	logger := slog.With("target", d.Address)
+
 	cl, err := c.connect(ctx, d)
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"error dialing device",
-			"device", d.Name,
 			"error", err,
 		)
 		return err
@@ -103,7 +78,12 @@ func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch 
 	defer cl.Close()
 
 	for _, co := range c.collectors {
-		ctx := &collectorContext{ch, d, cl}
+		ctx := &collectorContext{
+			ch:     ch,
+			device: d,
+			client: cl,
+			log:    logger,
+		}
 		err = co.collect(ctx)
 		if err != nil {
 			return err

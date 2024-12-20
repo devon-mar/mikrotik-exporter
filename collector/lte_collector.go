@@ -2,7 +2,6 @@ package collector
 
 import (
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -55,10 +54,9 @@ func (c *lteCollector) collect(ctx *collectorContext) error {
 func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/interface/lte/print", "?disabled=false", "=.proplist=name")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching lte interface names",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -74,11 +72,10 @@ func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, err
 func (c *lteCollector) collectForInterface(iface string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/lte/info", fmt.Sprintf("=number=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface statistics",
 			"interface", iface,
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -110,12 +107,11 @@ func (c *lteCollector) collectMetricForProperty(property, iface string, re *prot
 	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing interface metric value",
 			"property", property,
 			"interface", iface,
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return
 	}

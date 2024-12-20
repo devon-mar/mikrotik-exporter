@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strings"
 
 	"github.com/go-routeros/routeros/v3/proto"
@@ -37,10 +36,9 @@ func (c *monitorCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *monitorCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching ethernet interfaces",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -59,10 +57,9 @@ func (c *monitorCollector) collectForMonitor(eths []string, ctx *collectorContex
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching ethernet monitor info",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}

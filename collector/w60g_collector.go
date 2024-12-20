@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -35,10 +34,9 @@ func (c *w60gInterfaceCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *w60gInterfaceCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/w60g/print", "=.proplist=name")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching w60g interface metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -62,10 +60,9 @@ func (c *w60gInterfaceCollector) collectw60gMetricsForInterfaces(ifaces []string
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching w60g interface monitor metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -92,12 +89,11 @@ func (c *w60gInterfaceCollector) collectMetricsForw60gInterface(name string, se 
 		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			slog.Error(
+			ctx.log.Error(
 				"error parsing w60g interface monitor metric",
-				"device", ctx.device.Name,
 				"interface", name,
 				"property", prop,
-				"error", err,
+				"err", err,
 			)
 			return
 		}

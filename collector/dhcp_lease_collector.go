@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -47,10 +46,9 @@ func (c *dhcpLeaseCollector) collect(ctx *collectorContext) error {
 func (c *dhcpLeaseCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", "?status=bound", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching DHCP leases metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -63,12 +61,11 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 
 	f, err := parseDuration(re.Map["expires-after"])
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing duration metric value",
-			"device", ctx.device.Name,
 			"property", "expires-after",
 			"value", re.Map["expires-after"],
-			"error", err,
+			"err", err,
 		)
 		return
 	}
@@ -82,10 +79,9 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 
 	metric, err := prometheus.NewConstMetric(c.descriptions, prometheus.GaugeValue, v, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing dhcp lease",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return
 	}

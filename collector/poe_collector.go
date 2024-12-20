@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -37,10 +36,9 @@ func (c *poeCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *poeCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/poe/print", "=.proplist=name")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface poe metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -64,10 +62,9 @@ func (c *poeCollector) collectPOEMetricsForInterfaces(ifaces []string, ctx *coll
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface poe monitor metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -95,12 +92,11 @@ func (c *poeCollector) collectMetricsForInterface(name string, se *proto.Sentenc
 		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			slog.Error(
+			ctx.log.Error(
 				"error parsing interface poe monitor metric",
-				"device", ctx.device.Name,
 				"interface", name,
 				"property", prop,
-				"error", err,
+				"err", err,
 			)
 			return
 		}

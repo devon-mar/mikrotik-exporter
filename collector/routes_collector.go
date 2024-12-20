@@ -2,7 +2,6 @@ package collector
 
 import (
 	"fmt"
-	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -62,12 +61,11 @@ func (c *routesCollector) colllectForIPVersion(ipVersion, topic string, ctx *col
 func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", "=count-only=")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching routes metrics",
 			"ip_version", ipVersion,
-			"device", ctx.device.Name,
 			"topic", topic,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -76,11 +74,10 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing routes metrics",
 			"ip_version", ipVersion,
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -92,12 +89,11 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", fmt.Sprintf("?%s", protocol), "=count-only=")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching routes metrics",
 			"ip_version", ipVersion,
 			"protocol", protocol,
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -106,12 +102,11 @@ func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string
 	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing routes metrics",
 			"ip_version", ipVersion,
 			"protocol", protocol,
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}

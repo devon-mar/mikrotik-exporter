@@ -2,7 +2,6 @@ package collector
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/go-routeros/routeros/v3/proto"
@@ -51,10 +50,9 @@ func (c *netwatchCollector) collect(ctx *collectorContext) error {
 func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/tool/netwatch/print", "?disabled=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching netwatch metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -83,13 +81,12 @@ func (c *netwatchCollector) collectMetricForProperty(property, host, comment str
 		case "down":
 			numericValue = -1
 		default:
-			slog.Error(
+			ctx.log.Error(
 				"error parsing netwatch metric value",
-				"device", ctx.device.Name,
 				"host", host,
 				"property", property,
 				"value", value,
-				"error", fmt.Errorf("unexpected netwatch status value"),
+				"err", fmt.Errorf("unexpected netwatch status value"),
 			)
 		}
 		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, host, comment)

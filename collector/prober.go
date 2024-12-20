@@ -199,7 +199,6 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c:       module.c,
 		timeout: module.timeout,
 		d: config.Device{
-			Name:     target,
 			Address:  target,
 			User:     module.username,
 			Password: module.password,

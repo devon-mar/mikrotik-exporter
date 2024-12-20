@@ -65,10 +65,9 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching system resource metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -104,12 +103,11 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 	}
 
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing system resource metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}
@@ -136,7 +134,7 @@ func parseUptime(uptime string) (float64, error) {
 					"error parsing uptime field value",
 					"uptime", uptime,
 					"value", match,
-					"error", err,
+					"err", err,
 				)
 				return float64(0), err
 			}

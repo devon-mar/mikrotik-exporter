@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -23,7 +22,7 @@ func newIpsecCollector() routerOSCollector {
 func (c *ipsecCollector) init() {
 	c.props = []string{"src-address", "dst-address", "ph2-state", "invalid", "active", "comment"}
 
-	labelNames := []string{"devicename", "srcdst", "comment"}
+	labelNames := []string{"srcdst", "comment"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[1:] {
 		c.descriptions[p] = descriptionForPropertyName("ipsec", p, labelNames)
@@ -52,10 +51,9 @@ func (c *ipsecCollector) collect(ctx *collectorContext) error {
 func (c *ipsecCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/ip/ipsec/policy/print", "?disabled=false", "?dynamic=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -97,16 +95,15 @@ func (c *ipsecCollector) collectMetricForProperty(property, srcdst, comment stri
 		}
 
 		if err != nil {
-			slog.Error(
+			ctx.log.Error(
 				"error parsing ipsec metric value",
-				"device", ctx.device.Name,
 				"srcdst", srcdst,
 				"property", property,
 				"value", value,
-				"error", err,
+				"err", err,
 			)
 			return
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, srcdst, comment)
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, srcdst, comment)
 	}
 }

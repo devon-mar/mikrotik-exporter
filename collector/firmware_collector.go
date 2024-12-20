@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,10 +29,9 @@ func (c *firmwareCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *firmwareCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/system/package/getall")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error collecting packages",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}

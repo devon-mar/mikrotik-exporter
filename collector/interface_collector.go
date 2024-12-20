@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -51,10 +50,9 @@ func (c *interfaceCollector) collect(ctx *collectorContext) error {
 func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/interface/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -92,13 +90,12 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 		default:
 			v, err = strconv.ParseFloat(value, 64)
 			if err != nil {
-				slog.Error(
+				ctx.log.Error(
 					"error parsing interface metric value",
-					"device", ctx.device.Name,
 					"interface", re.Map["name"],
 					"property", property,
 					"value", value,
-					"error", err,
+					"err", err,
 				)
 				return
 			}

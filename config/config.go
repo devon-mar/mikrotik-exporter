@@ -51,7 +51,6 @@ type Config struct {
 
 // Device represents a target device
 type Device struct {
-	Name     string `yaml:"name"`
 	Address  string `yaml:"address,omitempty"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`

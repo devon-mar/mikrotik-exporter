@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -49,10 +48,9 @@ func (c *opticsCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *opticsCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -78,10 +76,9 @@ func (c *opticsCollector) collectOpticalMetricsForInterfaces(ifaces []string, ct
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching interface monitor metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -107,12 +104,11 @@ func (c *opticsCollector) collectMetricsForInterface(name string, se *proto.Sent
 
 		value, err := c.valueForKey(prop, v)
 		if err != nil {
-			slog.Error(
+			ctx.log.Error(
 				"error parsing interface monitor metric",
-				"device", ctx.device.Name,
 				"interface", name,
 				"property", prop,
-				"error", err,
+				"err", err,
 			)
 			return
 		}

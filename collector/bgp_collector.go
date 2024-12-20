@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -56,10 +55,9 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching bgp metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -80,13 +78,12 @@ func (c *bgpCollector) collectMetricForProperty(property, session, asn string, r
 	desc := c.descriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing bgp metric value",
-			"device", ctx.device.Name,
 			"session", session,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}

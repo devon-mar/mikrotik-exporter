@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -34,10 +33,9 @@ func (c *conntrackCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *conntrackCollector) collect(ctx *collectorContext) error {
 	reply, err := ctx.client.Run("/ip/firewall/connection/tracking/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching conntrack table metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return err
 	}
@@ -56,12 +54,11 @@ func (c *conntrackCollector) collectMetricForProperty(property string, desc *pro
 	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing conntrack metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}

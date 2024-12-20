@@ -1,6 +1,8 @@
 package collector
 
 import (
+	"log/slog"
+
 	"mikrotik-exporter/config"
 
 	"github.com/go-routeros/routeros/v3"
@@ -11,4 +13,5 @@ type collectorContext struct {
 	ch     chan<- prometheus.Metric
 	device *config.Device
 	client *routeros.Client
+	log    *slog.Logger
 }

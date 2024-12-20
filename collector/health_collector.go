@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 
 	"github.com/go-routeros/routeros/v3/proto"
@@ -56,10 +55,9 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/system/health/print")
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching system health metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -88,12 +86,11 @@ func (c *healthCollector) collectMetricForProperty(property string, re *proto.Se
 	}
 	v, err = strconv.ParseFloat(value, 64)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing system health metric value",
-			"device", ctx.device.Name,
 			"property", name,
 			"value", value,
-			"error", err,
+			"err", err,
 		)
 		return
 	}

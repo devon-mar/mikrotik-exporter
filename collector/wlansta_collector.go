@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -55,10 +54,9 @@ func (c *wlanSTACollector) collect(ctx *collectorContext) error {
 func (c *wlanSTACollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/interface/wireless/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error fetching wlan station metrics",
-			"device", ctx.device.Name,
-			"error", err,
+			"err", err,
 		)
 		return nil, err
 	}
@@ -89,12 +87,11 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 	}
 	v, err := strconv.ParseFloat(p, 64)
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing wlan station metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}
@@ -106,12 +103,11 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 func (c *wlanSTACollector) collectMetricForTXRXCounters(property, iface, mac string, re *proto.Sentence, ctx *collectorContext) {
 	tx, rx, err := splitStringToFloats(re.Map[property])
 	if err != nil {
-		slog.Error(
+		ctx.log.Error(
 			"error parsing wlan station metric value",
-			"device", ctx.device.Name,
 			"property", property,
 			"value", re.Map[property],
-			"error", err,
+			"err", err,
 		)
 		return
 	}

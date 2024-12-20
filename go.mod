@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/common v0.9.1
 	github.com/stretchr/testify v1.9.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -22,5 +22,4 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

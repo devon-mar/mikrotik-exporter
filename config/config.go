@@ -3,7 +3,7 @@ package config
 import (
 	"io"
 
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Config represents the configuration for the exporter
@@ -54,7 +54,7 @@ type DnsServer struct {
 // Load reads YAML from reader and unmashals in Config
 func Load(r io.Reader) (*Config, error) {
 	d := yaml.NewDecoder(r)
-	d.SetStrict(true)
+	d.KnownFields(true)
 
 	c := &Config{}
 	err := d.Decode(c)

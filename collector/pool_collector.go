@@ -33,7 +33,7 @@ func (c *poolCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *poolCollector) collectForIPVersion(ctx *collectorContext, ipVersion, topic string) error {
-	names, err := c.fetchPoolNames(ctx, ipVersion, topic)
+	names, err := c.fetchPoolNames(ctx, topic)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (c *poolCollector) collectForIPVersion(ctx *collectorContext, ipVersion, to
 	return nil
 }
 
-func (c *poolCollector) fetchPoolNames(ctx *collectorContext, ipVersion, topic string) ([]string, error) {
+func (c *poolCollector) fetchPoolNames(ctx *collectorContext, topic string) ([]string, error) {
 	reply, err := ctx.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
 	if err != nil {
 		return nil, err

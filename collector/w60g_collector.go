@@ -115,10 +115,6 @@ func neww60gInterfaceCollector() routerOSCollector {
 	}
 }
 
-func (c *w60gInterfaceCollector) valueForKey(name, value string) (float64, error) {
-	return strconv.ParseFloat(value, 64)
-}
-
 func (c *w60gInterfaceCollector) descForKey(name string) *prometheus.Desc {
 	switch name {
 	case "signal":

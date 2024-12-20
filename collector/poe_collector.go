@@ -97,10 +97,6 @@ func (c *poeCollector) collectMetricsForInterface(ctx *collectorContext, name st
 	}
 }
 
-func (c *poeCollector) valueForKey(name, value string) (float64, error) {
-	return strconv.ParseFloat(value, 64)
-}
-
 func (c *poeCollector) descForKey(name string) *prometheus.Desc {
 	switch name {
 	case "poe-out-current":

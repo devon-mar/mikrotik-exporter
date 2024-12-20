@@ -202,7 +202,7 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(&proberCollector{
 		c:       module.c,
 		timeout: module.timeout,
-		d: config.Device{
+		d: device{
 			Address:  target,
 			User:     module.username,
 			Password: module.password,
@@ -217,7 +217,7 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type proberCollector struct {
 	c       *collector
-	d       config.Device
+	d       device
 	timeout time.Duration
 }
 

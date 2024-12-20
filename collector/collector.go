@@ -7,8 +7,6 @@ import (
 	"log/slog"
 	"time"
 
-	"mikrotik-exporter/config"
-
 	"github.com/go-routeros/routeros/v3"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -39,13 +37,13 @@ var (
 )
 
 type collector struct {
-	devices    []config.Device
+	devices    []device
 	collectors []routerOSCollector
 	// if nil, tls will not be used to connect to the device
 	tlsCfg *tls.Config
 }
 
-func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch chan<- prometheus.Metric) {
+func (c *collector) collectForDevice(ctx context.Context, d device, ch chan<- prometheus.Metric) {
 	begin := time.Now()
 
 	err := c.connectAndCollect(ctx, &d, ch)
@@ -64,7 +62,7 @@ func (c *collector) collectForDevice(ctx context.Context, d config.Device, ch ch
 	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success)
 }
 
-func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch chan<- prometheus.Metric) error {
+func (c *collector) connectAndCollect(ctx context.Context, d *device, ch chan<- prometheus.Metric) error {
 	logger := slog.With("target", d.Address)
 
 	cl, err := c.connect(ctx, d)
@@ -93,7 +91,7 @@ func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch 
 	return nil
 }
 
-func (c *collector) connect(ctx context.Context, d *config.Device) (*routeros.Client, error) {
+func (c *collector) connect(ctx context.Context, d *device) (*routeros.Client, error) {
 	var client *routeros.Client
 	var err error
 	if c.tlsCfg != nil {

@@ -47,18 +47,6 @@ type Config struct {
 	Modules map[string]Module `yaml:"modules"`
 }
 
-// Device represents a target device
-type Device struct {
-	Address  string `yaml:"address,omitempty"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-}
-
-type DnsServer struct {
-	Address string `yaml:"address"`
-	Port    int    `yaml:"port"`
-}
-
 // Load reads YAML from reader and unmashals in Config
 func Load(r io.Reader) (*Config, error) {
 	d := yaml.NewDecoder(r)

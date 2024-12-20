@@ -21,7 +21,7 @@ func newDHCPv6Collector() routerOSCollector {
 func (c *dhcpv6Collector) init() {
 	const prefix = "dhcpv6"
 
-	labelNames := []string{"name", "address", "server"}
+	labelNames := []string{"server"}
 	c.bindingCountDesc = description(prefix, "binding_count", "number of active bindings per DHCPv6 server", labelNames)
 }
 
@@ -87,6 +87,6 @@ func (c *dhcpv6Collector) colllectForDHCPServer(ctx *collectorContext, dhcpServe
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.bindingCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
+	ctx.ch <- prometheus.MustNewConstMetric(c.bindingCountDesc, prometheus.GaugeValue, v, dhcpServer)
 	return nil
 }

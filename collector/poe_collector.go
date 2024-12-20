@@ -19,7 +19,7 @@ type poeCollector struct {
 func newPOECollector() routerOSCollector {
 	const prefix = "poe"
 
-	labelNames := []string{"name", "address", "interface"}
+	labelNames := []string{"interface"}
 	return &poeCollector{
 		currentDesc: description(prefix, "current", "current in mA", labelNames),
 		powerDesc:   description(prefix, "wattage", "Power in W", labelNames),
@@ -105,7 +105,7 @@ func (c *poeCollector) collectMetricsForInterface(name string, se *proto.Sentenc
 			return
 		}
 
-		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, ctx.device.Name, ctx.device.Address, name)
+		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, name)
 	}
 }
 

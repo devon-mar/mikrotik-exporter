@@ -23,7 +23,7 @@ func newCapsmanCollector() routerOSCollector {
 func (c *capsmanCollector) init() {
 	//"rx-signal", "tx-signal",
 	c.props = []string{"interface", "mac-address", "ssid", "uptime", "tx-signal", "rx-signal", "packets", "bytes"}
-	labelNames := []string{"name", "address", "interface", "mac_address", "ssid"}
+	labelNames := []string{"interface", "mac_address", "ssid"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[3 : len(c.props)-2] {
 		c.descriptions[p] = descriptionForPropertyName("capsman_station", p, labelNames)
@@ -104,7 +104,7 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 	}
 
 	desc := c.descriptions[property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, iface, mac, ssid)
 }
 
 func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ssid string, re *proto.Sentence, ctx *collectorContext) {
@@ -121,6 +121,6 @@ func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ss
 	}
 	desc_tx := c.descriptions["tx_"+property]
 	desc_rx := c.descriptions["rx_"+property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc_tx, prometheus.CounterValue, tx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
-	ctx.ch <- prometheus.MustNewConstMetric(desc_rx, prometheus.CounterValue, rx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
+	ctx.ch <- prometheus.MustNewConstMetric(desc_tx, prometheus.CounterValue, tx, iface, mac, ssid)
+	ctx.ch <- prometheus.MustNewConstMetric(desc_rx, prometheus.CounterValue, rx, iface, mac, ssid)
 }

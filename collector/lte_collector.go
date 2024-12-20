@@ -23,7 +23,7 @@ func newLteCollector() routerOSCollector {
 
 func (c *lteCollector) init() {
 	c.props = []string{"current-cellid", "primary-band", "ca-band", "rssi", "rsrp", "rsrq", "sinr"}
-	labelNames := []string{"name", "address", "interface", "cellid", "primaryband", "caband"}
+	labelNames := []string{"interface", "cellid", "primaryband", "caband"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("lte_interface", p, labelNames)
@@ -120,5 +120,5 @@ func (c *lteCollector) collectMetricForProperty(property, iface string, re *prot
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, current_cellid, primaryband, caband)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, iface, current_cellid, primaryband, caband)
 }

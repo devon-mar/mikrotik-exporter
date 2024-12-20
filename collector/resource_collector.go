@@ -36,7 +36,7 @@ func newResourceCollector() routerOSCollector {
 func (c *resourceCollector) init() {
 	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space", "uptime", "board-name", "version"}
 
-	labelNames := []string{"name", "address", "boardname", "version"}
+	labelNames := []string{"boardname", "version"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("system", p, labelNames)
@@ -115,7 +115,7 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 	}
 
 	desc := c.descriptions[property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, ctx.device.Name, ctx.device.Address, boardname, version)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, boardname, version)
 }
 
 func parseUptime(uptime string) (float64, error) {

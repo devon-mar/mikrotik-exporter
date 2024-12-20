@@ -18,7 +18,7 @@ type conntrackCollector struct {
 func newConntrackCollector() routerOSCollector {
 	const prefix = "conntrack"
 
-	labelNames := []string{"name", "address"}
+	labelNames := []string{}
 	return &conntrackCollector{
 		props:            []string{"total-entries", "max-entries"},
 		totalEntriesDesc: description(prefix, "entries", "Number of tracked connections", labelNames),
@@ -66,5 +66,5 @@ func (c *conntrackCollector) collectMetricForProperty(property string, desc *pro
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v)
 }

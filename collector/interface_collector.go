@@ -22,7 +22,7 @@ func newInterfaceCollector() routerOSCollector {
 
 func (c *interfaceCollector) init() {
 	c.props = []string{"name", "type", "disabled", "comment", "slave", "actual-mtu", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop", "link-downs"}
-	labelNames := []string{"name", "address", "interface", "type", "disabled", "comment", "running", "slave"}
+	labelNames := []string{"interface", "type", "disabled", "comment", "running", "slave"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[5:] {
 		c.descriptions[p] = descriptionForPropertyName("interface", p, labelNames)
@@ -103,7 +103,7 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 				return
 			}
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, ctx.device.Name, ctx.device.Address,
+		ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v,
 			re.Map["name"], re.Map["type"], re.Map["disabled"], re.Map["comment"], re.Map["running"], re.Map["slave"])
 
 	}

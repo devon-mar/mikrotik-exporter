@@ -23,7 +23,7 @@ type opticsCollector struct {
 func newOpticsCollector() routerOSCollector {
 	const prefix = "optics"
 
-	labelNames := []string{"name", "address", "interface"}
+	labelNames := []string{"interface"}
 	return &opticsCollector{
 		rxStatusDesc:    description(prefix, "rx_status", "RX status (1 = no loss)", labelNames),
 		txStatusDesc:    description(prefix, "tx_status", "TX status (1 = no faults)", labelNames),
@@ -117,7 +117,7 @@ func (c *opticsCollector) collectMetricsForInterface(name string, se *proto.Sent
 			return
 		}
 
-		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, ctx.device.Name, ctx.device.Address, name)
+		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, name)
 	}
 }
 

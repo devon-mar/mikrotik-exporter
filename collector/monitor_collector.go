@@ -21,7 +21,7 @@ func newMonitorCollector() routerOSCollector {
 
 func (c *monitorCollector) init() {
 	c.props = []string{"status", "rate", "full-duplex"}
-	labelNames := []string{"name", "address", "interface"}
+	labelNames := []string{"interface"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("monitor", p, labelNames)
@@ -83,7 +83,7 @@ func (c *monitorCollector) collectMetricsForEth(name string, se *proto.Sentence,
 
 		value := float64(c.valueForProp(prop, v))
 
-		ctx.ch <- prometheus.MustNewConstMetric(c.descriptions[prop], prometheus.GaugeValue, value, ctx.device.Name, ctx.device.Address, name)
+		ctx.ch <- prometheus.MustNewConstMetric(c.descriptions[prop], prometheus.GaugeValue, value, name)
 
 	}
 }

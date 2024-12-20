@@ -102,14 +102,14 @@ func (c *w60gInterfaceCollector) collectMetricsForw60gInterface(name string, se 
 			return
 		}
 
-		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, ctx.device.Name, ctx.device.Address, name)
+		ctx.ch <- prometheus.MustNewConstMetric(c.descForKey(prop), prometheus.GaugeValue, value, name)
 	}
 }
 
 func neww60gInterfaceCollector() routerOSCollector {
 	const prefix = "w60ginterface"
 
-	labelNames := []string{"name", "address", "interface"}
+	labelNames := []string{"interface"}
 	return &w60gInterfaceCollector{
 		frequencyDesc:         description(prefix, "frequency", "frequency of tx in MHz", labelNames),
 		txMCSDesc:             description(prefix, "txMCS", "TX MCS", labelNames),

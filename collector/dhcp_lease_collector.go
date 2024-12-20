@@ -17,7 +17,7 @@ type dhcpLeaseCollector struct {
 func (c *dhcpLeaseCollector) init() {
 	c.props = []string{"active-mac-address", "server", "status", "expires-after", "active-address", "host-name"}
 
-	labelNames := []string{"name", "address", "activemacaddress", "server", "status", "expiresafter", "activeaddress", "hostname"}
+	labelNames := []string{"activemacaddress", "server", "status", "expiresafter", "activeaddress", "hostname"}
 	c.descriptions = description("dhcp", "leases_metrics", "number of metrics", labelNames)
 }
 
@@ -80,7 +80,7 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 	// QuoteToASCII because of broken DHCP clients
 	hostname := strconv.QuoteToASCII(re.Map["host-name"])
 
-	metric, err := prometheus.NewConstMetric(c.descriptions, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
+	metric, err := prometheus.NewConstMetric(c.descriptions, prometheus.GaugeValue, v, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
 	if err != nil {
 		slog.Error(
 			"error parsing dhcp lease",

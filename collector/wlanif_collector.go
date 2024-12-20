@@ -23,7 +23,7 @@ func newWlanIFCollector() routerOSCollector {
 
 func (c *wlanIFCollector) init() {
 	c.props = []string{"channel", "registered-clients", "noise-floor", "overall-tx-ccq"}
-	labelNames := []string{"name", "address", "interface", "channel"}
+	labelNames := []string{"interface", "channel"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("wlan_interface", p, labelNames)
@@ -110,5 +110,5 @@ func (c *wlanIFCollector) collectMetricForProperty(property, iface string, re *p
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, channel)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, iface, channel)
 }

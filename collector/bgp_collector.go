@@ -24,7 +24,7 @@ func (c *bgpCollector) init() {
 	c.props = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
 
 	const prefix = "bgp"
-	labelNames := []string{"name", "address", "session", "asn"}
+	labelNames := []string{"session", "asn"}
 
 	c.descriptions = make(map[string]*prometheus.Desc)
 	c.descriptions["state"] = description(prefix, "up", "BGP session is established (up = 1)", labelNames)
@@ -91,7 +91,7 @@ func (c *bgpCollector) collectMetricForProperty(property, session, asn string, r
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, session, asn)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, session, asn)
 }
 
 func (c *bgpCollector) parseValueForProperty(property, value string) (float64, error) {

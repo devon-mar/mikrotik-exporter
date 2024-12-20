@@ -15,7 +15,7 @@ type poolCollector struct {
 func (c *poolCollector) init() {
 	const prefix = "ip_pool"
 
-	labelNames := []string{"name", "address", "ip_version", "pool"}
+	labelNames := []string{"ip_version", "pool"}
 	c.usedCountDesc = description(prefix, "pool_used_count", "number of used IP/prefixes in a pool", labelNames)
 }
 
@@ -95,6 +95,6 @@ func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *colle
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.usedCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion, pool)
+	ctx.ch <- prometheus.MustNewConstMetric(c.usedCountDesc, prometheus.GaugeValue, v, ipVersion, pool)
 	return nil
 }

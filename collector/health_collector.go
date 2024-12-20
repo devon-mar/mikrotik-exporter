@@ -22,7 +22,7 @@ func newhealthCollector() routerOSCollector {
 func (c *healthCollector) init() {
 	c.props = []string{"voltage", "temperature", "cpu-temperature"}
 
-	labelNames := []string{"name", "address"}
+	labelNames := []string{}
 	helpText := []string{"Input voltage to the RouterOS board, in volts", "Temperature of RouterOS board, in degrees Celsius", "Temperature of RouterOS CPU, in degrees Celsius"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for i, p := range c.props {
@@ -99,5 +99,5 @@ func (c *healthCollector) collectMetricForProperty(property string, re *proto.Se
 	}
 
 	desc := c.descriptions[name]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v)
 }

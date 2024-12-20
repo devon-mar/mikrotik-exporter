@@ -22,7 +22,7 @@ func newRoutesCollector() routerOSCollector {
 
 func (c *routesCollector) init() {
 	const prefix = "routes"
-	labelNames := []string{"name", "address", "ip_version"}
+	labelNames := []string{"ip_version"}
 	c.countDesc = description(prefix, "total_count", "number of routes in RIB", labelNames)
 	c.countProtocolDesc = description(prefix, "protocol_count", "number of routes per protocol in RIB", append(labelNames, "protocol"))
 
@@ -85,7 +85,7 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.countDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion)
+	ctx.ch <- prometheus.MustNewConstMetric(c.countDesc, prometheus.GaugeValue, v, ipVersion)
 	return nil
 }
 
@@ -116,6 +116,6 @@ func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.countProtocolDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion, protocol)
+	ctx.ch <- prometheus.MustNewConstMetric(c.countProtocolDesc, prometheus.GaugeValue, v, ipVersion, protocol)
 	return nil
 }

@@ -22,7 +22,7 @@ func newNetwatchCollector() routerOSCollector {
 
 func (c *netwatchCollector) init() {
 	c.props = []string{"host", "comment", "status"}
-	labelNames := []string{"name", "address", "host", "comment"}
+	labelNames := []string{"host", "comment"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[1:] {
 		c.descriptions[p] = descriptionForPropertyName("netwatch", p, labelNames)
@@ -92,6 +92,6 @@ func (c *netwatchCollector) collectMetricForProperty(property, host, comment str
 				"error", fmt.Errorf("unexpected netwatch status value"),
 			)
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, ctx.device.Name, ctx.device.Address, host, comment)
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, host, comment)
 	}
 }

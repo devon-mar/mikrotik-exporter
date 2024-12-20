@@ -15,7 +15,7 @@ type dhcpCollector struct {
 func (c *dhcpCollector) init() {
 	const prefix = "dhcp"
 
-	labelNames := []string{"name", "address", "server"}
+	labelNames := []string{"server"}
 	c.leasesActiveCountDesc = description(prefix, "leases_active_count", "number of active leases per DHCP server", labelNames)
 }
 
@@ -89,6 +89,6 @@ func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer 
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.leasesActiveCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
+	ctx.ch <- prometheus.MustNewConstMetric(c.leasesActiveCountDesc, prometheus.GaugeValue, v, dhcpServer)
 	return nil
 }

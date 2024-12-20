@@ -45,12 +45,8 @@ func (c *dhcpCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, error) {
-	reply, err := ctx.client.Run("/ip/dhcp-server/print", "=.proplist=name")
+	reply, err := ctx.Run("/ip/dhcp-server/print", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching DHCP server names",
-			"err", err,
-		)
 		return nil, err
 	}
 
@@ -65,24 +61,14 @@ func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, e
 func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer string) error {
 	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", fmt.Sprintf("?server=%s", dhcpServer), "=active=", "=count-only=")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching DHCP lease counts",
-			"dhcp_server", dhcpServer,
-			"err", err,
-		)
-		return err
+		return fmt.Errorf("/ip/dhcp-server/lease/print server=%s: %w", dhcpServer, err)
 	}
 	if reply.Done.Map["ret"] == "" {
 		return nil
 	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
-		ctx.log.Error(
-			"error parsing DHCP lease counts",
-			"dhcp_server", dhcpServer,
-			"err", err,
-		)
-		return err
+		return fmt.Errorf("parse DHCP server %s lease count: %w", dhcpServer, err)
 	}
 
 	ctx.ch <- prometheus.MustNewConstMetric(c.leasesActiveCountDesc, prometheus.GaugeValue, v, dhcpServer)

@@ -48,12 +48,8 @@ func (c *interfaceCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/interface/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/interface/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching interface metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

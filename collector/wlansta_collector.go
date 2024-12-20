@@ -52,12 +52,8 @@ func (c *wlanSTACollector) collect(ctx *collectorContext) error {
 }
 
 func (c *wlanSTACollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/interface/wireless/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/interface/wireless/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching wlan station metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

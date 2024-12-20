@@ -48,12 +48,8 @@ func (c *netwatchCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/tool/netwatch/print", "?disabled=false", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/tool/netwatch/print", "?disabled=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching netwatch metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

@@ -31,12 +31,8 @@ func (c *conntrackCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *conntrackCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/ip/firewall/connection/tracking/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/ip/firewall/connection/tracking/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching conntrack table metrics",
-			"err", err,
-		)
 		return err
 	}
 

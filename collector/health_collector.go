@@ -53,12 +53,8 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/system/health/print")
+	reply, err := ctx.Run("/system/health/print")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching system health metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

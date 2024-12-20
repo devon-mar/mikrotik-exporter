@@ -27,12 +27,8 @@ func (c *firmwareCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *firmwareCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/system/package/getall")
+	reply, err := ctx.Run("/system/package/getall")
 	if err != nil {
-		ctx.log.Error(
-			"error collecting packages",
-			"err", err,
-		)
 		return err
 	}
 

@@ -52,12 +52,8 @@ func (c *lteCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
-	reply, err := ctx.client.Run("/interface/lte/print", "?disabled=false", "=.proplist=name")
+	reply, err := ctx.Run("/interface/lte/print", "?disabled=false", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching lte interface names",
-			"err", err,
-		)
 		return nil, err
 	}
 

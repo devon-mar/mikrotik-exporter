@@ -34,12 +34,8 @@ func (c *poeCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *poeCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/ethernet/poe/print", "=.proplist=name")
+	reply, err := ctx.Run("/interface/ethernet/poe/print", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching interface poe metrics",
-			"err", err,
-		)
 		return err
 	}
 
@@ -57,15 +53,11 @@ func (c *poeCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *poeCollector) collectPOEMetricsForInterfaces(ifaces []string, ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/ethernet/poe/monitor",
+	reply, err := ctx.Run("/interface/ethernet/poe/monitor",
 		"=numbers="+strings.Join(ifaces, ","),
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching interface poe monitor metrics",
-			"err", err,
-		)
 		return err
 	}
 

@@ -49,12 +49,8 @@ func (c *ipsecCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *ipsecCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/ip/ipsec/policy/print", "?disabled=false", "?dynamic=false", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/ip/ipsec/policy/print", "?disabled=false", "?dynamic=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching interface metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

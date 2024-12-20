@@ -32,12 +32,8 @@ func (c *w60gInterfaceCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *w60gInterfaceCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/w60g/print", "=.proplist=name")
+	reply, err := ctx.Run("/interface/w60g/print", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching w60g interface metrics",
-			"err", err,
-		)
 		return err
 	}
 

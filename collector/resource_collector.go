@@ -63,12 +63,8 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching system resource metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

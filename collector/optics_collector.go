@@ -46,12 +46,8 @@ func (c *opticsCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *opticsCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
+	reply, err := ctx.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching interface metrics",
-			"err", err,
-		)
 		return err
 	}
 

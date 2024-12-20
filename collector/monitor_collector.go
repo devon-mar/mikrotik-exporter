@@ -34,12 +34,8 @@ func (c *monitorCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *monitorCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/ethernet/print", "=.proplist=name")
+	reply, err := ctx.Run("/interface/ethernet/print", "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching ethernet interfaces",
-			"err", err,
-		)
 		return err
 	}
 
@@ -52,7 +48,7 @@ func (c *monitorCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *monitorCollector) collectForMonitor(eths []string, ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/ethernet/monitor",
+	reply, err := ctx.Run("/interface/ethernet/monitor",
 		"=numbers="+strings.Join(eths, ","),
 		"=once=",
 		"=.proplist=name,"+strings.Join(c.props, ","))

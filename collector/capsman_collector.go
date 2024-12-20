@@ -53,9 +53,8 @@ func (c *capsmanCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *capsmanCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/caps-man/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/caps-man/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error("error fetching wlan station metrics", "error", err)
 		return nil, err
 	}
 

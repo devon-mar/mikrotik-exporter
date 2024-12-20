@@ -53,12 +53,8 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
-		ctx.log.Error(
-			"error fetching bgp metrics",
-			"err", err,
-		)
 		return nil, err
 	}
 

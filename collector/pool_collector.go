@@ -49,12 +49,8 @@ func (c *poolCollector) collectForIPVersion(ipVersion, topic string, ctx *collec
 }
 
 func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorContext) ([]string, error) {
-	reply, err := ctx.client.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
+	reply, err := ctx.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
 	if err != nil {
-		ctx.log.Error(
-			"error fetching pool names",
-			"err", err,
-		)
 		return nil, err
 	}
 

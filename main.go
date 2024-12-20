@@ -18,12 +18,11 @@ import (
 
 // single device can be defined via CLI flags, multiple via config file.
 var (
-	configFile  = flag.String("config", "config.yml", "config file to load")
-	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
-	logLevel    = flag.String("log-level", "info", "log level")
-	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
-	port        = flag.String("port", ":9436", "port number to listen on")
-	ver         = flag.Bool("version", false, "find the version of binary")
+	configFile = flag.String("config", "config.yml", "config file to load")
+	logFormat  = flag.String("log-format", "json", "logformat text or json (default json)")
+	logLevel   = flag.String("log-level", "info", "log level")
+	port       = flag.String("port", ":9436", "port number to listen on")
+	ver        = flag.Bool("version", false, "find the version of binary")
 
 	cfg *config.Config
 
@@ -99,7 +98,6 @@ func startServer() {
 			<head><title>Mikrotik Exporter</title></head>
 			<body>
 			<h1>Mikrotik Exporter</h1>
-			<p><a href="` + *metricsPath + `">Metrics</a></p>
 			</body>
 			</html>`))
 	})

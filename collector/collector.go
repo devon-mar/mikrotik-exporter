@@ -13,10 +13,7 @@ import (
 )
 
 const (
-	namespace  = "mikrotik"
-	apiPort    = "8728"
-	apiPortTLS = "8729"
-	dnsPort    = 53
+	namespace = "mikrotik"
 
 	// DefaultTimeout defines the default timeout when connecting to a router
 	DefaultTimeout = 5 * time.Second

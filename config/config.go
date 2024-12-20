@@ -10,6 +10,9 @@ type Module struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 
+	UsernameFile string `yaml:"username_file"`
+	PasswordFile string `yaml:"password_file"`
+
 	EnableTLS   bool `yaml:"enable_tls"`
 	InsecureTLS bool `yaml:"insecure_tls"`
 

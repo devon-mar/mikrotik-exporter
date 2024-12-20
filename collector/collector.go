@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/go-routeros/routeros/v3"
@@ -41,11 +42,27 @@ type collector struct {
 	// if nil, tls will not be used to connect to the device
 	tlsCfg *tls.Config
 
+	usernameFile string
+	passwordFile string
+
 	usernameStr string
 	passwordStr string
 }
 
 func (c *collector) credentials() (string, string, error) {
+	if c.usernameFile != "" && c.passwordFile != "" {
+		username, err := os.ReadFile(c.usernameFile)
+		if err != nil {
+			return "", "", err
+		}
+		password, err := os.ReadFile(c.passwordFile)
+		if err != nil {
+			return "", "", err
+		}
+
+		return string(username), string(password), nil
+	}
+
 	return c.usernameStr, c.passwordStr, nil
 }
 

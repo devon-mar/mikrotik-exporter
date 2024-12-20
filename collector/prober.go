@@ -23,10 +23,8 @@ const (
 )
 
 type proberModule struct {
-	c        *collector
-	timeout  time.Duration
-	username string
-	password string
+	c       *collector
+	timeout time.Duration
 }
 
 type Prober struct {
@@ -165,14 +163,14 @@ func NewProber(c *config.Config) (http.Handler, error) {
 		}
 
 		p.modules[name] = proberModule{
-			username: m.Username,
-			password: m.Password,
-			timeout:  timeout,
+			timeout: timeout,
 			c: &collector{
-				tlsCfg:      tlsCfg,
-				collectors:  collectorList(m.Features),
-				usernameStr: m.Username,
-				passwordStr: m.Password,
+				tlsCfg:       tlsCfg,
+				collectors:   collectorList(m.Features),
+				usernameFile: m.UsernameFile,
+				passwordFile: m.PasswordFile,
+				usernameStr:  m.Username,
+				passwordStr:  m.Password,
 			},
 		}
 	}

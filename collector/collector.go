@@ -9,16 +9,12 @@ import (
 	"io"
 	"log/slog"
 	"net"
-	"os"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"mikrotik-exporter/config"
 
 	"github.com/go-routeros/routeros/v3"
-	"github.com/miekg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -243,38 +239,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	var realDevices []config.Device
 
 	for _, dev := range c.devices {
-		if (config.SrvRecord{}) != dev.Srv {
-			slog.Info("SRV configuration detected", "SRV", dev.Srv.Record)
-			conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-			dnsServer := net.JoinHostPort(conf.Servers[0], strconv.Itoa(dnsPort))
-			if (config.DnsServer{}) != dev.Srv.Dns {
-				dnsServer = net.JoinHostPort(dev.Srv.Dns.Address, strconv.Itoa(dev.Srv.Dns.Port))
-				slog.Info("Custom DNS config detected", "DnsServer", dnsServer)
-			}
-			dnsMsg := new(dns.Msg)
-			dnsCli := new(dns.Client)
-
-			dnsMsg.RecursionDesired = true
-			dnsMsg.SetQuestion(dns.Fqdn(dev.Srv.Record), dns.TypeSRV)
-			r, _, err := dnsCli.Exchange(dnsMsg, dnsServer)
-			if err != nil {
-				os.Exit(1)
-			}
-
-			for _, k := range r.Answer {
-				if s, ok := k.(*dns.SRV); ok {
-					d := config.Device{}
-					d.Name = strings.TrimRight(s.Target, ".")
-					d.Address = strings.TrimRight(s.Target, ".")
-					d.User = dev.User
-					d.Password = dev.Password
-					_ = c.getIdentity(&d)
-					realDevices = append(realDevices, d)
-				}
-			}
-		} else {
-			realDevices = append(realDevices, dev)
-		}
+		realDevices = append(realDevices, dev)
 	}
 
 	wg.Add(len(realDevices))

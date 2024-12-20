@@ -16,6 +16,8 @@ type Module struct {
 	Timeout int `yaml:"timeout"`
 
 	Features Features `yaml:"features"`
+
+	CACert string `yaml:"ca_cert"`
 }
 
 type Features struct {
@@ -53,7 +55,6 @@ type Device struct {
 	Address  string `yaml:"address,omitempty"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
-	Port     string `yaml:"port"`
 }
 
 type DnsServer struct {

@@ -82,7 +82,12 @@ func loadConfig() (*config.Config, error) {
 }
 
 func startServer() {
-	p := collector.NewProber(cfg)
+	p, err := collector.NewProber(cfg)
+	if err != nil {
+		slog.Error("error creating prober", "err", err)
+		os.Exit(1)
+	}
+
 	http.Handle("GET /probe", p)
 
 	http.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +106,7 @@ func startServer() {
 
 	slog.Info("Listening", "port", *port)
 
-	err := http.ListenAndServe(*port, nil)
+	err = http.ListenAndServe(*port, nil)
 	if err != nil {
 		slog.Error("ListenAndServe error", "err", err)
 		os.Exit(1)

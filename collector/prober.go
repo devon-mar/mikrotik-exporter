@@ -2,10 +2,13 @@ package collector
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"log"
-	"net"
 	"net/http"
-	"strconv"
+	"os"
 	"time"
 
 	"mikrotik-exporter/config"
@@ -22,6 +25,7 @@ const (
 
 type proberModule struct {
 	c        *collector
+	timeout  time.Duration
 	username string
 	password string
 }
@@ -112,7 +116,32 @@ func collectorList(f config.Features) []routerOSCollector {
 	return c
 }
 
-func NewProber(c *config.Config) http.Handler {
+func readCertificate(file string) (*x509.Certificate, error) {
+	const pemBlockCert = "CERTIFICATE"
+
+	certBytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("ReadFile: %w", err)
+	}
+
+	block, _ := pem.Decode(certBytes)
+	if block == nil {
+		return nil, fmt.Errorf("no PEM data found.")
+	}
+
+	if block.Type != pemBlockCert {
+		return nil, fmt.Errorf("unexpected block type: %s", block.Type)
+	}
+
+	c, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing certificate: %w", err)
+	}
+
+	return c, nil
+}
+
+func NewProber(c *config.Config) (http.Handler, error) {
 	p := &Prober{modules: make(map[string]proberModule, len(c.Modules))}
 
 	for name, m := range c.Modules {
@@ -120,19 +149,34 @@ func NewProber(c *config.Config) http.Handler {
 		if m.Timeout != 0 {
 			timeout = time.Duration(m.Timeout)
 		}
+
+		var rootCAs *x509.CertPool
+		if m.CACert != "" {
+			cert, err := readCertificate(m.CACert)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", m.CACert, err)
+			}
+			rootCAs = x509.NewCertPool()
+			rootCAs.AddCert(cert)
+		}
+
+		tlsCfg := &tls.Config{
+			InsecureSkipVerify: m.InsecureTLS,
+			RootCAs:            rootCAs,
+		}
+
 		p.modules[name] = proberModule{
 			username: m.Username,
 			password: m.Password,
+			timeout:  timeout,
 			c: &collector{
-				collectors:  collectorList(m.Features),
-				timeout:     timeout,
-				enableTLS:   m.EnableTLS,
-				insecureTLS: m.InsecureTLS,
+				tlsCfg:     tlsCfg,
+				collectors: collectorList(m.Features),
 			},
 		}
 	}
 
-	return p
+	return p, nil
 }
 
 // ServeHTTP implements http.Handler
@@ -150,25 +194,17 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	host, portStr, err := net.SplitHostPort(target)
-	if err != nil || host == "" || portStr == "" {
-		http.Error(w, "invalid target", http.StatusBadRequest)
-		return
-	}
-	port, err := strconv.Atoi(portStr)
-	if err != nil || port <= 0 || port > portMax {
-		http.Error(w, "invalid port", http.StatusBadRequest)
-		return
-	}
-
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(&proberCollector{module.c, config.Device{
-		Name:     host,
-		Port:     portStr,
-		Address:  host,
-		User:     module.username,
-		Password: module.password,
-	}})
+	registry.MustRegister(&proberCollector{
+		c:       module.c,
+		timeout: module.timeout,
+		d: config.Device{
+			Name:     target,
+			Address:  target,
+			User:     module.username,
+			Password: module.password,
+		},
+	})
 
 	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog:      log.Default(),
@@ -177,14 +213,18 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type proberCollector struct {
-	c *collector
-	d config.Device
+	c       *collector
+	d       config.Device
+	timeout time.Duration
 }
 
 // Collect implements prometheus.Collector
 func (pc *proberCollector) Collect(c chan<- prometheus.Metric) {
-	// TODO
-	pc.c.collectForDevice(context.TODO(), pc.d, c)
+	// https://github.com/prometheus/client_golang/issues/1538
+	ctx, cancel := context.WithTimeout(context.Background(), pc.timeout)
+	defer cancel()
+
+	pc.c.collectForDevice(ctx, pc.d, c)
 }
 
 // Describe implements prometheus.Collector

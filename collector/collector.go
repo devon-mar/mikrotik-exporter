@@ -2,11 +2,8 @@ package collector
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
-	"errors"
+	"crypto/tls"
 	"fmt"
-	"io"
 	"log/slog"
 	"time"
 
@@ -42,11 +39,10 @@ var (
 )
 
 type collector struct {
-	devices     []config.Device
-	collectors  []routerOSCollector
-	timeout     time.Duration
-	enableTLS   bool
-	insecureTLS bool
+	devices    []config.Device
+	collectors []routerOSCollector
+	// if nil, tls will not be used to connect to the device
+	tlsCfg *tls.Config
 }
 
 func (c *collector) getIdentity(ctx context.Context, d *config.Device) error {
@@ -118,50 +114,16 @@ func (c *collector) connectAndCollect(ctx context.Context, d *config.Device, ch 
 }
 
 func (c *collector) connect(ctx context.Context, d *config.Device) (*routeros.Client, error) {
-	client, err := routeros.DialContext(ctx, d.Address+":"+d.Port, d.User, d.Password)
+	var client *routeros.Client
+	var err error
+	if c.tlsCfg != nil {
+		client, err = routeros.DialTLSContext(ctx, d.Address, d.User, d.Password, c.tlsCfg)
+	} else {
+		client, err = routeros.DialContext(ctx, d.Address, d.User, d.Password)
+	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("dial: %w", err)
 	}
-	slog.Debug("got client", "device", d.Name)
-
-	slog.Debug("trying to login", "device", d.Name)
-	r, err := client.Run("/login", "=name="+d.User, "=password="+d.Password)
-	if err != nil {
-		return nil, err
-	}
-	ret, ok := r.Done.Map["ret"]
-	if !ok {
-		// Login method post-6.43 one stage, cleartext and no challenge
-		if r.Done != nil {
-			return client, nil
-		}
-		return nil, errors.New("RouterOS: /login: no ret (challenge) received")
-	}
-
-	// Login method pre-6.43 two stages, challenge
-	b, err := hex.DecodeString(ret)
-	if err != nil {
-		return nil, fmt.Errorf("RouterOS: /login: invalid ret (challenge) hex string received: %s", err)
-	}
-
-	r, err = client.Run("/login", "=name="+d.User, "=response="+challengeResponse(b, d.Password))
-	if err != nil {
-		return nil, err
-	}
-	slog.Debug("done wth login", "device", d.Name)
 
 	return client, nil
-
-	//tlsCfg := &tls.Config{
-	//	InsecureSkipVerify: c.insecureTLS,
-	//}
-	//	return routeros.DialTLSTimeout(d.Address+apiPortTLS, d.User, d.Password, tlsCfg, c.timeout)
-}
-
-func challengeResponse(cha []byte, password string) string {
-	h := md5.New()
-	h.Write([]byte{0})
-	_, _ = io.WriteString(h, password)
-	h.Write(cha)
-	return fmt.Sprintf("00%x", h.Sum(nil))
 }

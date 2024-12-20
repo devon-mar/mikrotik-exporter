@@ -42,7 +42,7 @@ func (c *wlanIFCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, n := range names {
-		err := c.collectForInterface(n, ctx)
+		err := c.collectForInterface(ctx, n)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, 
 	return names, nil
 }
 
-func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContext) error {
+func (c *wlanIFCollector) collectForInterface(ctx *collectorContext, iface string) error {
 	reply, err := ctx.client.Run("/interface/wireless/monitor", fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		ctx.log.Error(
@@ -79,13 +79,13 @@ func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContex
 	for _, p := range c.props[1:] {
 		// there's always going to be only one sentence in reply, as we
 		// have to explicitly specify the interface
-		c.collectMetricForProperty(p, iface, reply.Re[0], ctx)
+		c.collectMetricForProperty(ctx, p, iface, reply.Re[0])
 	}
 
 	return nil
 }
 
-func (c *wlanIFCollector) collectMetricForProperty(property, iface string, re *proto.Sentence, ctx *collectorContext) {
+func (c *wlanIFCollector) collectMetricForProperty(ctx *collectorContext, property, iface string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	channel := re.Map["channel"]
 	if re.Map[property] == "" {

@@ -37,14 +37,14 @@ func (c *conntrackCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range reply.Re {
-		c.collectMetricForProperty("total-entries", c.totalEntriesDesc, re, ctx)
-		c.collectMetricForProperty("max-entries", c.maxEntriesDesc, re, ctx)
+		c.collectMetricForProperty(ctx, "total-entries", c.totalEntriesDesc, re)
+		c.collectMetricForProperty(ctx, "max-entries", c.maxEntriesDesc, re)
 	}
 
 	return nil
 }
 
-func (c *conntrackCollector) collectMetricForProperty(property string, desc *prometheus.Desc, re *proto.Sentence, ctx *collectorContext) {
+func (c *conntrackCollector) collectMetricForProperty(ctx *collectorContext, property string, desc *prometheus.Desc, re *proto.Sentence) {
 	if re.Map[property] == "" {
 		return
 	}

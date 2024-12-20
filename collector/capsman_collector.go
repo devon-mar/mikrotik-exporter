@@ -46,7 +46,7 @@ func (c *capsmanCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -61,20 +61,20 @@ func (c *capsmanCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, erro
 	return reply.Re, nil
 }
 
-func (c *capsmanCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *capsmanCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	iface := re.Map["interface"]
 	mac := re.Map["mac-address"]
 	ssid := re.Map["ssid"]
 
 	for _, p := range c.props[3 : len(c.props)-2] {
-		c.collectMetricForProperty(p, iface, mac, ssid, re, ctx)
+		c.collectMetricForProperty(ctx, p, iface, mac, ssid, re)
 	}
 	for _, p := range c.props[len(c.props)-2:] {
-		c.collectMetricForTXRXCounters(p, iface, mac, ssid, re, ctx)
+		c.collectMetricForTXRXCounters(ctx, p, iface, mac, ssid, re)
 	}
 }
 
-func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid string, re *proto.Sentence, ctx *collectorContext) {
+func (c *capsmanCollector) collectMetricForProperty(ctx *collectorContext, property, iface, mac, ssid string, re *proto.Sentence) {
 	if re.Map[property] == "" {
 		return
 	}
@@ -104,7 +104,7 @@ func (c *capsmanCollector) collectMetricForProperty(property, iface, mac, ssid s
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, iface, mac, ssid)
 }
 
-func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ssid string, re *proto.Sentence, ctx *collectorContext) {
+func (c *capsmanCollector) collectMetricForTXRXCounters(ctx *collectorContext, property, iface, mac, ssid string, re *proto.Sentence) {
 	tx, rx, err := splitStringToFloats(re.Map[property])
 	if err != nil {
 		ctx.log.Error(

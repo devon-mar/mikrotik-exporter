@@ -49,10 +49,10 @@ func (c *poeCollector) collect(ctx *collectorContext) error {
 		return nil
 	}
 
-	return c.collectPOEMetricsForInterfaces(ifaces, ctx)
+	return c.collectPOEMetricsForInterfaces(ctx, ifaces)
 }
 
-func (c *poeCollector) collectPOEMetricsForInterfaces(ifaces []string, ctx *collectorContext) error {
+func (c *poeCollector) collectPOEMetricsForInterfaces(ctx *collectorContext, ifaces []string) error {
 	reply, err := ctx.Run("/interface/ethernet/poe/monitor",
 		"=numbers="+strings.Join(ifaces, ","),
 		"=once=",
@@ -67,13 +67,13 @@ func (c *poeCollector) collectPOEMetricsForInterfaces(ifaces []string, ctx *coll
 			continue
 		}
 
-		c.collectMetricsForInterface(name, se, ctx)
+		c.collectMetricsForInterface(ctx, name, se)
 	}
 
 	return nil
 }
 
-func (c *poeCollector) collectMetricsForInterface(name string, se *proto.Sentence, ctx *collectorContext) {
+func (c *poeCollector) collectMetricsForInterface(ctx *collectorContext, name string, se *proto.Sentence) {
 	for _, prop := range c.props {
 		v, ok := se.Map[prop]
 		if !ok {

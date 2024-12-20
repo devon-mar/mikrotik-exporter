@@ -42,7 +42,7 @@ func (c *lteCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, n := range names {
-		err := c.collectForInterface(n, ctx)
+		err := c.collectForInterface(ctx, n)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (c *lteCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, err
 	return names, nil
 }
 
-func (c *lteCollector) collectForInterface(iface string, ctx *collectorContext) error {
+func (c *lteCollector) collectForInterface(ctx *collectorContext, iface string) error {
 	reply, err := ctx.client.Run("/interface/lte/info", fmt.Sprintf("=number=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		ctx.log.Error(
@@ -79,13 +79,13 @@ func (c *lteCollector) collectForInterface(iface string, ctx *collectorContext) 
 	for _, p := range c.props[3:] {
 		// there's always going to be only one sentence in reply, as we
 		// have to explicitly specify the interface
-		c.collectMetricForProperty(p, iface, reply.Re[0], ctx)
+		c.collectMetricForProperty(ctx, p, iface, reply.Re[0])
 	}
 
 	return nil
 }
 
-func (c *lteCollector) collectMetricForProperty(property, iface string, re *proto.Sentence, ctx *collectorContext) {
+func (c *lteCollector) collectMetricForProperty(ctx *collectorContext, property, iface string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	current_cellid := re.Map["current-cellid"]
 	// get only band and its width, drop earfcn and phy-cellid info

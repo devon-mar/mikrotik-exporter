@@ -63,10 +63,10 @@ func (c *opticsCollector) collect(ctx *collectorContext) error {
 		return nil
 	}
 
-	return c.collectOpticalMetricsForInterfaces(ifaces, ctx)
+	return c.collectOpticalMetricsForInterfaces(ctx, ifaces)
 }
 
-func (c *opticsCollector) collectOpticalMetricsForInterfaces(ifaces []string, ctx *collectorContext) error {
+func (c *opticsCollector) collectOpticalMetricsForInterfaces(ctx *collectorContext, ifaces []string) error {
 	reply, err := ctx.client.Run("/interface/ethernet/monitor",
 		"=numbers="+strings.Join(ifaces, ","),
 		"=once=",
@@ -85,13 +85,13 @@ func (c *opticsCollector) collectOpticalMetricsForInterfaces(ifaces []string, ct
 			continue
 		}
 
-		c.collectMetricsForInterface(name, se, ctx)
+		c.collectMetricsForInterface(ctx, name, se)
 	}
 
 	return nil
 }
 
-func (c *opticsCollector) collectMetricsForInterface(name string, se *proto.Sentence, ctx *collectorContext) {
+func (c *opticsCollector) collectMetricsForInterface(ctx *collectorContext, name string, se *proto.Sentence) {
 	for _, prop := range c.props {
 		v, ok := se.Map[prop]
 		if !ok {

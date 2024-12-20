@@ -41,7 +41,7 @@ func (c *interfaceCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -56,13 +56,13 @@ func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 	return reply.Re, nil
 }
 
-func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *interfaceCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	for _, p := range c.props[5:] {
-		c.collectMetricForProperty(p, re, ctx)
+		c.collectMetricForProperty(ctx, p, re)
 	}
 }
 
-func (c *interfaceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
+func (c *interfaceCollector) collectMetricForProperty(ctx *collectorContext, property string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
 		var (

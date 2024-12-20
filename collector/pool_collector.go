@@ -29,17 +29,17 @@ func (c *poolCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *poolCollector) collect(ctx *collectorContext) error {
-	return c.collectForIPVersion("4", "ip", ctx)
+	return c.collectForIPVersion(ctx, "4", "ip")
 }
 
-func (c *poolCollector) collectForIPVersion(ipVersion, topic string, ctx *collectorContext) error {
-	names, err := c.fetchPoolNames(ipVersion, topic, ctx)
+func (c *poolCollector) collectForIPVersion(ctx *collectorContext, ipVersion, topic string) error {
+	names, err := c.fetchPoolNames(ctx, ipVersion, topic)
 	if err != nil {
 		return err
 	}
 
 	for _, n := range names {
-		err := c.collectForPool(ipVersion, topic, n, ctx)
+		err := c.collectForPool(ctx, ipVersion, topic, n)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func (c *poolCollector) collectForIPVersion(ipVersion, topic string, ctx *collec
 	return nil
 }
 
-func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorContext) ([]string, error) {
+func (c *poolCollector) fetchPoolNames(ctx *collectorContext, ipVersion, topic string) ([]string, error) {
 	reply, err := ctx.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorCo
 	return names, nil
 }
 
-func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *collectorContext) error {
+func (c *poolCollector) collectForPool(ctx *collectorContext, ipVersion, topic, pool string) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/pool/used/print", topic), fmt.Sprintf("?pool=%s", pool), "=count-only=")
 	if err != nil {
 		ctx.log.Error(

@@ -34,22 +34,22 @@ func (c *routesCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *routesCollector) collect(ctx *collectorContext) error {
-	err := c.colllectForIPVersion("4", "ip", ctx)
+	err := c.colllectForIPVersion(ctx, "4", "ip")
 	if err != nil {
 		return err
 	}
 
-	return c.colllectForIPVersion("6", "ip", ctx)
+	return c.colllectForIPVersion(ctx, "6", "ip")
 }
 
-func (c *routesCollector) colllectForIPVersion(ipVersion, topic string, ctx *collectorContext) error {
-	err := c.colllectCount(ipVersion, topic, ctx)
+func (c *routesCollector) colllectForIPVersion(ctx *collectorContext, ipVersion, topic string) error {
+	err := c.colllectCount(ctx, ipVersion, topic)
 	if err != nil {
 		return err
 	}
 
 	for _, p := range c.protocols {
-		err := c.colllectCountProtcol(ipVersion, topic, p, ctx)
+		err := c.colllectCountProtcol(ctx, ipVersion, topic, p)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func (c *routesCollector) colllectForIPVersion(ipVersion, topic string, ctx *col
 	return nil
 }
 
-func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorContext) error {
+func (c *routesCollector) colllectCount(ctx *collectorContext, ipVersion, topic string) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", "=count-only=")
 	if err != nil {
 		ctx.log.Error(
@@ -86,7 +86,7 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 	return nil
 }
 
-func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string, ctx *collectorContext) error {
+func (c *routesCollector) colllectCountProtcol(ctx *collectorContext, ipVersion, topic, protocol string) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", fmt.Sprintf("?%s", protocol), "=count-only=")
 	if err != nil {
 		ctx.log.Error(

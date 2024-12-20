@@ -56,7 +56,7 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -71,13 +71,13 @@ func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, err
 	return reply.Re, nil
 }
 
-func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *resourceCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	for _, p := range c.props[:6] {
-		c.collectMetricForProperty(p, re, ctx)
+		c.collectMetricForProperty(ctx, p, re)
 	}
 }
 
-func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
+func (c *resourceCollector) collectMetricForProperty(ctx *collectorContext, property string, re *proto.Sentence) {
 	var v float64
 	var vtype prometheus.ValueType
 	var err error

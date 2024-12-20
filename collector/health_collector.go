@@ -43,9 +43,9 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 
 	for _, re := range stats {
 		if metric, ok := re.Map["name"]; ok {
-			c.collectMetricForProperty(metric, re, ctx)
+			c.collectMetricForProperty(ctx, metric, re)
 		} else {
-			c.collectForStat(re, ctx)
+			c.collectForStat(ctx, re)
 		}
 	}
 
@@ -61,13 +61,13 @@ func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error
 	return reply.Re, nil
 }
 
-func (c *healthCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *healthCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	for _, p := range c.props[:3] {
-		c.collectMetricForProperty(p, re, ctx)
+		c.collectMetricForProperty(ctx, p, re)
 	}
 }
 
-func (c *healthCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
+func (c *healthCollector) collectMetricForProperty(ctx *collectorContext, property string, re *proto.Sentence) {
 	var v float64
 	var err error
 

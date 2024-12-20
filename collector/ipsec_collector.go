@@ -42,7 +42,7 @@ func (c *ipsecCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -57,16 +57,16 @@ func (c *ipsecCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error)
 	return reply.Re, nil
 }
 
-func (c *ipsecCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *ipsecCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	srcdst := re.Map["src-address"] + "-" + re.Map["dst-address"]
 	comment := re.Map["comment"]
 
 	for _, p := range c.props[2:] {
-		c.collectMetricForProperty(p, srcdst, comment, re, ctx)
+		c.collectMetricForProperty(ctx, p, srcdst, comment, re)
 	}
 }
 
-func (c *ipsecCollector) collectMetricForProperty(property, srcdst, comment string, re *proto.Sentence, ctx *collectorContext) {
+func (c *ipsecCollector) collectMetricForProperty(ctx *collectorContext, property, srcdst, comment string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
 		var v float64

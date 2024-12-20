@@ -46,7 +46,7 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -61,16 +61,16 @@ func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	return reply.Re, nil
 }
 
-func (c *bgpCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *bgpCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	asn := re.Map["remote-as"]
 	session := re.Map["name"]
 
 	for _, p := range c.props[2:] {
-		c.collectMetricForProperty(p, session, asn, re, ctx)
+		c.collectMetricForProperty(ctx, p, session, asn, re)
 	}
 }
 
-func (c *bgpCollector) collectMetricForProperty(property, session, asn string, re *proto.Sentence, ctx *collectorContext) {
+func (c *bgpCollector) collectMetricForProperty(ctx *collectorContext, property, session, asn string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {

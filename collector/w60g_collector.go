@@ -47,10 +47,10 @@ func (c *w60gInterfaceCollector) collect(ctx *collectorContext) error {
 		return nil
 	}
 
-	return c.collectw60gMetricsForInterfaces(ifaces, ctx)
+	return c.collectw60gMetricsForInterfaces(ctx, ifaces)
 }
 
-func (c *w60gInterfaceCollector) collectw60gMetricsForInterfaces(ifaces []string, ctx *collectorContext) error {
+func (c *w60gInterfaceCollector) collectw60gMetricsForInterfaces(ctx *collectorContext, ifaces []string) error {
 	reply, err := ctx.client.Run("/interface/w60g/monitor",
 		"=numbers="+strings.Join(ifaces, ","),
 		"=once=",
@@ -68,13 +68,13 @@ func (c *w60gInterfaceCollector) collectw60gMetricsForInterfaces(ifaces []string
 			continue
 		}
 
-		c.collectMetricsForw60gInterface(name, se, ctx)
+		c.collectMetricsForw60gInterface(ctx, name, se)
 	}
 
 	return nil
 }
 
-func (c *w60gInterfaceCollector) collectMetricsForw60gInterface(name string, se *proto.Sentence, ctx *collectorContext) {
+func (c *w60gInterfaceCollector) collectMetricsForw60gInterface(ctx *collectorContext, name string, se *proto.Sentence) {
 	for _, prop := range c.props {
 		v, ok := se.Map[prop]
 		if !ok {

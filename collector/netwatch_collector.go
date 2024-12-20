@@ -41,7 +41,7 @@ func (c *netwatchCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		c.collectForStat(ctx, re)
 	}
 
 	return nil
@@ -56,16 +56,16 @@ func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, err
 	return reply.Re, nil
 }
 
-func (c *netwatchCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+func (c *netwatchCollector) collectForStat(ctx *collectorContext, re *proto.Sentence) {
 	host := re.Map["host"]
 	comment := re.Map["comment"]
 
 	for _, p := range c.props[2:] {
-		c.collectMetricForProperty(p, host, comment, re, ctx)
+		c.collectMetricForProperty(ctx, p, host, comment, re)
 	}
 }
 
-func (c *netwatchCollector) collectMetricForProperty(property, host, comment string, re *proto.Sentence, ctx *collectorContext) {
+func (c *netwatchCollector) collectMetricForProperty(ctx *collectorContext, property, host, comment string, re *proto.Sentence) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
 		var numericValue float64

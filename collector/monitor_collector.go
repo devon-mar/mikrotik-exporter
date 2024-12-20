@@ -44,10 +44,10 @@ func (c *monitorCollector) collect(ctx *collectorContext) error {
 		eths[idx] = eth.Map["name"]
 	}
 
-	return c.collectForMonitor(eths, ctx)
+	return c.collectForMonitor(ctx, eths)
 }
 
-func (c *monitorCollector) collectForMonitor(eths []string, ctx *collectorContext) error {
+func (c *monitorCollector) collectForMonitor(ctx *collectorContext, eths []string) error {
 	reply, err := ctx.Run("/interface/ethernet/monitor",
 		"=numbers="+strings.Join(eths, ","),
 		"=once=",
@@ -61,13 +61,13 @@ func (c *monitorCollector) collectForMonitor(eths []string, ctx *collectorContex
 	}
 
 	for _, e := range reply.Re {
-		c.collectMetricsForEth(e.Map["name"], e, ctx)
+		c.collectMetricsForEth(ctx, e.Map["name"], e)
 	}
 
 	return nil
 }
 
-func (c *monitorCollector) collectMetricsForEth(name string, se *proto.Sentence, ctx *collectorContext) {
+func (c *monitorCollector) collectMetricsForEth(ctx *collectorContext, name string, se *proto.Sentence) {
 	for _, prop := range c.props {
 		v, ok := se.Map[prop]
 		if !ok {

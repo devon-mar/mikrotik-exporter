@@ -3,8 +3,6 @@ package collector
 import (
 	"math"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestSplitStringToFloats(t *testing.T) {
@@ -59,23 +57,31 @@ func TestSplitStringToFloats(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		f1, f2, err := splitStringToFloats(testCase.input)
+		t.Run(testCase.input, func(t *testing.T) {
+			f1, f2, err := splitStringToFloats(testCase.input)
 
-		switch testCase.hasError {
-		case true:
-			assert.Error(t, err)
-		case false:
-			assert.NoError(t, err)
-		}
+			if testCase.hasError && err == nil {
+				t.Fatalf("expected an error but got nil")
+			} else if !testCase.hasError && err != nil {
+				t.Fatalf("expected no error but got: %v", err)
+			}
 
-		switch testCase.isNaN {
-		case true:
-			assert.True(t, math.IsNaN(f1))
-			assert.True(t, math.IsNaN(f2))
-		case false:
-			assert.Equal(t, testCase.expected.f1, f1)
-			assert.Equal(t, testCase.expected.f2, f2)
-		}
+			if testCase.isNaN {
+				if !math.IsNaN(f1) {
+					t.Errorf("expected f1 to be NaN")
+				}
+				if !math.IsNaN(f2) {
+					t.Errorf("expected f2 to be NaN")
+				}
+			} else {
+				if testCase.expected.f1 != f1 {
+					t.Errorf("expected value %f, got %f", testCase.expected.f1, f1)
+				}
+				if testCase.expected.f2 != f2 {
+					t.Errorf("expected value %f, got %f", testCase.expected.f2, f2)
+				}
+			}
+		})
 	}
 }
 
@@ -125,13 +131,14 @@ func TestParseDuration(t *testing.T) {
 	for _, testCase := range testCases {
 		f, err := parseDuration(testCase.input)
 
-		switch testCase.hasError {
-		case true:
-			assert.Error(t, err)
-		case false:
-			assert.NoError(t, err)
+		if testCase.hasError && err == nil {
+			t.Fatalf("expected an error but got nil")
+		} else if !testCase.hasError && err != nil {
+			t.Fatalf("expected no error but got: %v", err)
 		}
 
-		assert.Equal(t, testCase.output, f)
+		if testCase.output != f {
+			t.Errorf("expected %f, got %f", testCase.output, f)
+		}
 	}
 }

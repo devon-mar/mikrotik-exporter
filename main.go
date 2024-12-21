@@ -2,11 +2,14 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/prometheus/common/version"
 
@@ -21,7 +24,7 @@ var (
 	configFile = flag.String("config", "config.yml", "config file to load")
 	logFormat  = flag.String("log-format", "json", "logformat text or json (default json)")
 	logLevel   = flag.String("log-level", "info", "log level")
-	port       = flag.String("port", ":9436", "port number to listen on")
+	addr       = flag.String("port", ":9436", "port number to listen on")
 	ver        = flag.Bool("version", false, "find the version of binary")
 
 	cfg *config.Config
@@ -87,13 +90,15 @@ func startServer() {
 		os.Exit(1)
 	}
 
-	http.Handle("GET /probe", p)
+	mux := http.NewServeMux()
 
-	http.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("GET /probe", p)
+
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`<html>
 			<head><title>Mikrotik Exporter</title></head>
 			<body>
@@ -102,11 +107,30 @@ func startServer() {
 			</html>`))
 	})
 
-	slog.Info("Listening", "port", *port)
-
-	err = http.ListenAndServe(*port, nil)
-	if err != nil {
-		slog.Error("ListenAndServe error", "err", err)
-		os.Exit(1)
+	// Modified from example https://pkg.go.dev/net/http#Server.Close
+	srv := http.Server{
+		Addr:    *addr,
+		Handler: mux,
 	}
+	idleConnsClosed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+
+		// We received an interrupt signal, shut down.
+		if err := srv.Shutdown(context.Background()); err != nil {
+			// Error from closing listeners, or context timeout:
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnsClosed)
+	}()
+
+	slog.Info("Listening on", "port", *addr)
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		// Error starting or closing listener:
+		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	}
+
+	<-idleConnsClosed
 }

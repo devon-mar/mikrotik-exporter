@@ -11,7 +11,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/prometheus/common/version"
+	"github.com/prometheus/client_golang/prometheus/collectors/version"
 
 	"mikrotik-exporter/collector"
 	"mikrotik-exporter/config"

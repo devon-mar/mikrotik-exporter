@@ -38,6 +38,10 @@ func collectorList(f config.Features) []routerOSCollector {
 		c = append(c, newBGPCollector())
 	}
 
+	if f.Capsman {
+		c = append(c, newCapsmanCollector())
+	}
+
 	if f.Conntrack {
 		c = append(c, newConntrackCollector())
 	}
@@ -62,40 +66,8 @@ func collectorList(f config.Features) []routerOSCollector {
 		c = append(c, newhealthCollector())
 	}
 
-	if f.Routes {
-		c = append(c, newRoutesCollector())
-	}
-
-	if f.POE {
-		c = append(c, newPOECollector())
-	}
-
-	if f.Pools {
-		c = append(c, newPoolCollector())
-	}
-
-	if f.Optics {
-		c = append(c, newOpticsCollector())
-	}
-
-	if f.W60G {
-		c = append(c, neww60gInterfaceCollector())
-	}
-
-	if f.WlanSTA {
-		c = append(c, newWlanSTACollector())
-	}
-
-	if f.Capsman {
-		c = append(c, newCapsmanCollector())
-	}
-
-	if f.WlanIF {
-		c = append(c, newWlanIFCollector())
-	}
-
-	if f.Monitor {
-		c = append(c, newMonitorCollector())
+	if f.Interface {
+		c = append(c, newInterfaceCollector())
 	}
 
 	if f.Ipsec {
@@ -108,6 +80,42 @@ func collectorList(f config.Features) []routerOSCollector {
 
 	if f.Netwatch {
 		c = append(c, newNetwatchCollector())
+	}
+
+	if f.Optics {
+		c = append(c, newOpticsCollector())
+	}
+
+	if f.POE {
+		c = append(c, newPOECollector())
+	}
+
+	if f.Pools {
+		c = append(c, newPoolCollector())
+	}
+
+	if f.Resource {
+		c = append(c, newResourceCollector())
+	}
+
+	if f.Routes {
+		c = append(c, newRoutesCollector())
+	}
+
+	if f.W60G {
+		c = append(c, neww60gInterfaceCollector())
+	}
+
+	if f.WlanSTA {
+		c = append(c, newWlanSTACollector())
+	}
+
+	if f.WlanIF {
+		c = append(c, newWlanIFCollector())
+	}
+
+	if f.Monitor {
+		c = append(c, newMonitorCollector())
 	}
 
 	return c
@@ -184,13 +192,13 @@ func (p *Prober) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 
-	target := r.URL.Query().Get("target")
+	target := r.URL.Query().Get(paramTarget)
 	if target == "" {
 		http.Error(w, "no target", http.StatusBadRequest)
 		return
 	}
 
-	moduleName := r.URL.Query().Get("module")
+	moduleName := r.URL.Query().Get(paramModule)
 
 	module, ok := p.modules[moduleName]
 	if !ok {

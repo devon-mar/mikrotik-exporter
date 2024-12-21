@@ -1,10 +1,11 @@
-FROM debian:9.9-slim
+FROM --platform=$BUILDPLATFORM golang:1.23 as builder
+ARG TARGETOS TARGETARCH
 
-EXPOSE 9436
+WORKDIR /go/src/app
+COPY . .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make
 
-COPY scripts/start.sh /app/
-COPY dist/mikrotik-exporter_linux_amd64 /app/mikrotik-exporter
+FROM scratch
 
-RUN chmod 755 /app/*
-
-ENTRYPOINT ["/app/start.sh"]
+COPY --from=builder /go/src/app/mikrotik-exporter /bin/radius-exporter
+ENTRYPOINT ["/bin/mikrotik-exporter"]

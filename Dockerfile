@@ -7,5 +7,5 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make
 
 FROM scratch
 
-COPY --from=builder /go/src/app/mikrotik-exporter /bin/radius-exporter
+COPY --from=builder /go/src/app/mikrotik-exporter /bin/mikrotik-exporter
 ENTRYPOINT ["/bin/mikrotik-exporter"]

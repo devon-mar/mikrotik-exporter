@@ -13,7 +13,7 @@ type Module struct {
 	UsernameFile string `yaml:"username_file"`
 	PasswordFile string `yaml:"password_file"`
 
-	EnableTLS   bool `yaml:"enable_tls"`
+	TLS         bool `yaml:"tls"`
 	InsecureTLS bool `yaml:"insecure_tls"`
 
 	Timeout int `yaml:"timeout"`

@@ -155,19 +155,22 @@ func NewProber(c *config.Config) (http.Handler, error) {
 			timeout = time.Duration(m.Timeout)
 		}
 
-		var rootCAs *x509.CertPool
-		if m.CACert != "" {
-			cert, err := readCertificate(m.CACert)
-			if err != nil {
-				return nil, fmt.Errorf("%s: %w", m.CACert, err)
+		var tlsCfg *tls.Config
+		if m.TLS {
+			var rootCAs *x509.CertPool
+			if m.CACert != "" {
+				cert, err := readCertificate(m.CACert)
+				if err != nil {
+					return nil, fmt.Errorf("%s: %w", m.CACert, err)
+				}
+				rootCAs = x509.NewCertPool()
+				rootCAs.AddCert(cert)
 			}
-			rootCAs = x509.NewCertPool()
-			rootCAs.AddCert(cert)
-		}
 
-		tlsCfg := &tls.Config{
-			InsecureSkipVerify: m.InsecureTLS,
-			RootCAs:            rootCAs,
+			tlsCfg = &tls.Config{
+				InsecureSkipVerify: m.InsecureTLS,
+				RootCAs:            rootCAs,
+			}
 		}
 
 		p.modules[name] = proberModule{

@@ -20,7 +20,7 @@ type Module struct {
 
 	Features Features `yaml:"features"`
 
-	CACert string `yaml:"ca_cert"`
+	CAFile string `yaml:"ca_file"`
 }
 
 type Features struct {

@@ -158,10 +158,10 @@ func NewProber(c *config.Config) (http.Handler, error) {
 		var tlsCfg *tls.Config
 		if m.TLS {
 			var rootCAs *x509.CertPool
-			if m.CACert != "" {
-				cert, err := readCertificate(m.CACert)
+			if m.CAFile != "" {
+				cert, err := readCertificate(m.CAFile)
 				if err != nil {
-					return nil, fmt.Errorf("%s: %w", m.CACert, err)
+					return nil, fmt.Errorf("%s: %w", m.CAFile, err)
 				}
 				rootCAs = x509.NewCertPool()
 				rootCAs.AddCert(cert)
